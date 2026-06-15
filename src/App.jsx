@@ -73,7 +73,7 @@ const plantDB = [
 const matchPianta = (nomeAI) =>
   plantDB.find(p => nomeAI?.toLowerCase().includes(p.nome.toLowerCase()));
 
-export default function AppPiante() {
+export default function App() {
 
   const [miePiante, setMiePiante] = useState([]);
   const [diagnosi, setDiagnosi] = useState(null);
