@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+// niente import aggiuntivi
 // update
 // 🌿 DATABASE PIANTE
 const plantDB = [
@@ -92,7 +91,7 @@ export default function AppPiante() {
   const analizzaSaluteAI = async (imageBase64) => {
     try {
 
-      const res = await fetch("https://plantome.onrender.com", {
+      const res = await fetch("https://plantome.onrender.com/api/analizza", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
