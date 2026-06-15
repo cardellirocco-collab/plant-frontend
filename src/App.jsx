@@ -232,7 +232,7 @@ export default function App() {
     if (granted) {
       sendNotification(
         '🎉 Notifiche attivate!',
-        'Ti avviseremo quando le tue piante hanno bisogno di acqua',
+        'Green House ti avviserà quando le tue piante hanno bisogno di acqua',
         '🌿'
       );
     }
@@ -290,6 +290,9 @@ export default function App() {
 
 
       fontFamily: 'system-ui, -apple-system, sans-serif'
+       display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
     }}>
       
       {/* 🔔 PROMPT NOTIFICHE */}
@@ -364,18 +367,27 @@ export default function App() {
       )}
 
       {/* 🎯 HEADER */}
-      <div style={{
-        background: `linear-gradient(135deg, ${COLORS.militaryGreen} 0%, ${COLORS.darkGreen} 100%)`,
-        padding: '20px',
-        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
-      }}>
-        <div style={{ maxWidth: 420, margin: '0 auto' }}>
-          <div style={{ 
-            display: 'flex', 
-            justifyContent: 'space-between', 
-            alignItems: 'center',
-            marginBottom: plantsNeedWater.length > 0 ? '10px' : 0
-          }}>
+     <div style={{
+  background: `linear-gradient(135deg, ${COLORS.militaryGreen} 0%, ${COLORS.darkGreen} 100%)`,
+  padding: '20px',
+  boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+  width: '100%'
+}}>
+  <div style={{ 
+    maxWidth: 420, 
+    margin: '0 auto',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
+  }}>
+         <div style={{ 
+  display: 'flex', 
+  justifyContent: 'center', 
+  alignItems: 'center',
+  gap: '15px',
+  marginBottom: plantsNeedWater.length > 0 ? '10px' : 0,
+  width: '100%'
+}}>
             <h1 style={{ 
               color: COLORS.creamWhite, 
               margin: 0,
@@ -384,7 +396,7 @@ export default function App() {
               alignItems: 'center',
               gap: '10px'
             }}>
-              🌿 Casa Verde
+              🪴🏡 Green House
             </h1>
             
             {/* Pulsante Notifiche */}
