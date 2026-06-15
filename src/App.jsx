@@ -88,12 +88,44 @@ const getWaterIcon = (quantita) => {
   return "💧💧💧💧";
 };
 
+// 📸 GESTIONE FOTO
+const handleImageUpload = (myId, file) => {
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setMiePiante(miePiante.map(p => {
+        if (p.myId === myId) {
+          return { ...p, customImg: reader.result };
+        }
+        return p;
+      }));
+    };
+    reader.readAsDataURL(file);
+  }
+};
+
+const removeCustomImage = (myId) => {
+  setMiePiante(miePiante.map(p => {
+    if (p.myId === myId) {
+      const { customImg, ...rest } = p;
+      return rest;
+    }
+    return p;
+  }));
+};
+
+// Funzione per ottenere l'immagine corretta (custom o default)
+const getPlantImage = (plant) => {
+  return plant.customImg || plant.img;
+};
+
 // 📱 COMPONENTE PRINCIPALE
 export default function App() {
   const [miePiante, setMiePiante] = useState([]);
   const [tab, setTab] = useState("mie");
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [showImageOptions, setShowImageOptions] = useState(false);
 
   // Carica dati da localStorage
   useEffect(() => {
@@ -248,7 +280,7 @@ export default function App() {
         padding: '0 20px 20px'
       }}>
 
-        {/* 🏠 LE MIE PIANTE */}
+                {/* 🏠 LE MIE PIANTE */}
         {tab === 'mie' && (
           <>
             {miePiante.length === 0 ? (
@@ -269,7 +301,6 @@ export default function App() {
                 return (
                   <div
                     key={p.myId}
-                    onClick={() => setSelectedPlant(p)}
                     style={{
                       display: 'flex',
                       gap: 15,
@@ -278,29 +309,53 @@ export default function App() {
                       borderRadius: 16,
                       backgroundColor: COLORS.creamWhite,
                       border: `2px solid ${needsWater ? COLORS.alertRed : COLORS.lightGreen}`,
-                      cursor: 'pointer',
                       transition: 'all 0.3s',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                      position: 'relative'
                     }}
-                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                   >
-                    <img
-                      src={p.img}
-                      alt={p.nome}
-                      style={{
-                        width: 80,
-                        height: 80,
-                        borderRadius: 12,
-                        objectFit: 'cover',
-                        border: `3px solid ${COLORS.accentGreen}`
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
+                    {/* Contenitore Immagine con Badge Foto Personalizzata */}
+                    <div style={{ position: 'relative' }}>
+                      <img
+                        src={getPlantImage(p)}
+                        alt={p.nome}
+                        onClick={() => setSelectedPlant(p)}
+                        style={{
+                          width: 80,
+                          height: 80,
+                          borderRadius: 12,
+                          objectFit: 'cover',
+                          border: `3px solid ${COLORS.accentGreen}`,
+                          cursor: 'pointer'
+                        }}
+                      />
+                      {p.customImg && (
+                        <div style={{
+                          position: 'absolute',
+                          top: -5,
+                          right: -5,
+                          backgroundColor: COLORS.militaryGreen,
+                          color: COLORS.creamWhite,
+                          borderRadius: '50%',
+                          width: 24,
+                          height: 24,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '12px',
+                          border: `2px solid ${COLORS.creamWhite}`
+                        }}>
+                          📸
+                        </div>
+                      )}
+                    </div>
+
+                    <div style={{ flex: 1 }} onClick={() => setSelectedPlant(p)}>
                       <h3 style={{ 
                         margin: '0 0 8px 0', 
                         color: COLORS.textDark,
-                        fontSize: '18px'
+                        fontSize: '18px',
+                        cursor: 'pointer'
                       }}>
                         {p.nome}
                       </h3>
@@ -510,10 +565,13 @@ export default function App() {
         )}
       </div>
 
-      {/* 🔍 MODAL DETTAGLIO PIANTA */}
+          {/* 🔍 MODAL DETTAGLIO PIANTA */}
       {selectedPlant && (
         <div
-          onClick={() => setSelectedPlant(null)}
+          onClick={() => {
+            setSelectedPlant(null);
+            setShowImageOptions(false);
+          }}
           style={{
             position: 'fixed',
             top: 0,
@@ -551,7 +609,8 @@ export default function App() {
               borderTopRightRadius: 24,
               display: 'flex',
               justifyContent: 'space-between',
-              alignItems: 'center'
+              alignItems: 'center',
+              zIndex: 10
             }}>
               <h2 style={{ 
                 color: COLORS.creamWhite,
@@ -561,7 +620,10 @@ export default function App() {
                 {selectedPlant.nome}
               </h2>
               <button
-                onClick={() => setSelectedPlant(null)}
+                onClick={() => {
+                  setSelectedPlant(null);
+                  setShowImageOptions(false);
+                }}
                 style={{
                   background: 'none',
                   border: 'none',
@@ -576,20 +638,190 @@ export default function App() {
               </button>
             </div>
 
-            {/* Immagine */}
-            <img
-              src={selectedPlant.img}
-              alt={selectedPlant.nome}
-              style={{
-                width: '100%',
-                height: 250,
-                objectFit: 'cover'
-              }}
-            />
+            {/* Immagine con pulsante cambio foto (solo per piante già aggiunte) */}
+            <div style={{ position: 'relative' }}>
+              <img
+                src={getPlantImage(selectedPlant)}
+                alt={selectedPlant.nome}
+                style={{
+                  width: '100%',
+                  height: 250,
+                  objectFit: 'cover'
+                }}
+              />
+              
+              {/* Pulsante Cambio Foto - Solo per piante già aggiunte */}
+              {selectedPlant.myId && (
+                <div style={{
+                  position: 'absolute',
+                  bottom: 15,
+                  right: 15,
+                  display: 'flex',
+                  gap: 10
+                }}>
+                  <button
+                    onClick={() => setShowImageOptions(!showImageOptions)}
+                    style={{
+                      padding: '10px 16px',
+                      backgroundColor: COLORS.militaryGreen,
+                      color: COLORS.creamWhite,
+                      border: 'none',
+                      borderRadius: 10,
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6
+                    }}
+                  >
+                    📸 Cambia foto
+                  </button>
+                  
+                  {selectedPlant.customImg && (
+                    <button
+                      onClick={() => {
+                        if (confirm('Ripristinare la foto originale?')) {
+                          removeCustomImage(selectedPlant.myId);
+                          setSelectedPlant({...selectedPlant, customImg: undefined});
+                        }
+                      }}
+                      style={{
+                        padding: '10px',
+                        backgroundColor: COLORS.alertRed,
+                        color: COLORS.creamWhite,
+                        border: 'none',
+                        borderRadius: 10,
+                        fontSize: '14px',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                      }}
+                    >
+                      🗑️
+                    </button>
+                  )}
+                </div>
+              )}
 
-            {/* Contenuto */}
+              {/* Menu Opzioni Foto */}
+              {showImageOptions && selectedPlant.myId && (
+                <div
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    position: 'absolute',
+                    bottom: 70,
+                    right: 15,
+                    backgroundColor: COLORS.creamWhite,
+                    borderRadius: 12,
+                    boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                    overflow: 'hidden',
+                    minWidth: 200,
+                    animation: 'slideUp 0.2s'
+                  }}
+                >
+                  {/* Scatta Foto */}
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '14px 16px',
+                    cursor: 'pointer',
+                    borderBottom: `1px solid ${COLORS.lightGreen}30`,
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGreen + '20'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <span style={{ fontSize: '20px' }}>📷</span>
+                    <span style={{ 
+                      color: COLORS.textDark,
+                      fontWeight: '500',
+                      fontSize: '14px'
+                    }}>
+                      Scatta foto
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      capture="environment"
+                      onChange={(e) => {
+                        if (e.target.files[0]) {
+                          handleImageUpload(selectedPlant.myId, e.target.files[0]);
+                          setShowImageOptions(false);
+                          // Aggiorna l'immagine nel modal
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setSelectedPlant({...selectedPlant, customImg: reader.result});
+                          };
+                          reader.readAsDataURL(e.target.files[0]);
+                        }
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+
+                  {/* Carica dalla Galleria */}
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    padding: '14px 16px',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGreen + '20'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    <span style={{ fontSize: '20px' }}>🖼️</span>
+                    <span style={{ 
+                      color: COLORS.textDark,
+                      fontWeight: '500',
+                      fontSize: '14px'
+                    }}>
+                      Carica da galleria
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        if (e.target.files[0]) {
+                          handleImageUpload(selectedPlant.myId, e.target.files[0]);
+                          setShowImageOptions(false);
+                          // Aggiorna l'immagine nel modal
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setSelectedPlant({...selectedPlant, customImg: reader.result});
+                          };
+                          reader.readAsDataURL(e.target.files[0]);
+                        }
+                      }}
+                      style={{ display: 'none' }}
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
+
+            {/* Resto del contenuto del modal (rimane uguale) */}
             <div style={{ padding: 20 }}>
               
+              {/* Badge Foto Personalizzata */}
+              {selectedPlant.customImg && (
+                <div style={{
+                  display: 'inline-block',
+                  padding: '6px 12px',
+                  backgroundColor: COLORS.accentGreen,
+                  color: COLORS.creamWhite,
+                  borderRadius: 8,
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  marginBottom: 15
+                }}>
+                  📸 Foto personalizzata
+                </div>
+              )}
+
               {/* Nome Scientifico */}
               <div style={{
                 fontSize: '14px',
@@ -733,6 +965,7 @@ export default function App() {
                       onClick={() => {
                         waterPlant(selectedPlant.myId);
                         setSelectedPlant(null);
+                        setShowImageOptions(false);
                       }}
                       style={{
                         flex: 1,
@@ -756,6 +989,7 @@ export default function App() {
                       onClick={() => {
                         if (confirm(`Rimuovere ${selectedPlant.nome}?`)) {
                           removePlant(selectedPlant.myId);
+                          setShowImageOptions(false);
                         }
                       }}
                       style={{
@@ -782,6 +1016,7 @@ export default function App() {
                     onClick={() => {
                       addPlant(selectedPlant);
                       setSelectedPlant(null);
+                      setShowImageOptions(false);
                     }}
                     disabled={miePiante.some(p => p.nome === selectedPlant.nome)}
                     style={{
