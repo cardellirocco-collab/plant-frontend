@@ -83,11 +83,7 @@ const getPlantImage = (nome) => {
 };
 
 export default function App() {
-  const [miePiante, setMiePiante] = useState([
-    { nome: "Monstera", giorniAcqua: 7 },
-    { nome: "Snake Plant", giorniAcqua: 4 },
-    { nome: "Parlor Palm", giorniAcqua: 2 },
-  ]);
+const [miePiante, setMiePiante] = useState([]);
 
   const [tab, setTab] = useState("mie");
   const [diagnosi, setDiagnosi] = useState(null);
