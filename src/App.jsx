@@ -287,7 +287,7 @@ export default function App() {
       minHeight: '100vh', 
       backgroundColor: COLORS.creamWhite,
 
-javascript
+
 
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
