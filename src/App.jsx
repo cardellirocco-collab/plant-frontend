@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-// 🎨 PALETTE COLORI
+// 🎨 PALETTE COLORI (rimane uguale)
 const COLORS = {
   militaryGreen: '#4A5D4F',
   darkGreen: '#3A4D3F',
@@ -10,6 +10,73 @@ const COLORS = {
   textDark: '#2C3E2F',
   alertRed: '#C1666B'
 };
+
+// 🔔 GESTIONE NOTIFICHE
+const requestNotificationPermission = async () => {
+  if (!("Notification" in window)) {
+    alert("Il tuo browser non supporta le notifiche");
+    return false;
+  }
+
+  if (Notification.permission === "granted") {
+    return true;
+  }
+
+  if (Notification.permission !== "denied") {
+    const permission = await Notification.requestPermission();
+    return permission === "granted";
+  }
+
+  return false;
+};
+
+const sendNotification = (title, body, icon = "🌿") => {
+  if (Notification.permission === "granted") {
+    new Notification(title, {
+      body: body,
+      icon: icon,
+      badge: icon,
+      tag: 'plant-watering',
+      requireInteraction: false,
+      silent: false
+    });
+  }
+};
+
+const scheduleNotifications = (plants) => {
+  // Cancella notifiche precedenti
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    // Per notifiche programmate avanzate serve un service worker
+    // Per ora usiamo un controllo giornaliero
+  }
+};
+
+// Controlla piante da innaffiare
+const checkPlantsToWater = (plants) => {
+  const today = new Date().toDateString();
+  const lastCheck = localStorage.getItem('lastNotificationCheck');
+  
+  // Controlla solo una volta al giorno
+  if (lastCheck === today) return;
+  
+  const plantsToWater = plants.filter(p => {
+    const daysLeft = Math.ceil((new Date(p.nextWatering) - new Date()) / (1000 * 60 * 60 * 24));
+    return daysLeft <= 0;
+  });
+
+  if (plantsToWater.length > 0) {
+    const plantNames = plantsToWater.map(p => p.nome).join(', ');
+    sendNotification(
+      '💧 Tempo di innaffiare!',
+      `${plantsToWater.length} pianta${plantsToWater.length > 1 ? 'e' : ''} ha bisogno di acqua: ${plantNames}`,
+      '🌿'
+    );
+  }
+
+  localStorage.setItem('lastNotificationCheck', today);
+};
+
+// ... (resto delle funzioni esistenti: plantDB, getDaysUntilWatering, getLightIcon, getWaterIcon, handleImageUpload, ecc.)
 
 // 🌿 DATABASE COMPLETO - PARTE 1
 const plantDB = [
@@ -126,6 +193,8 @@ export default function App() {
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showImageOptions, setShowImageOptions] = useState(false);
+const [notificationsEnabled, setNotificationsEnabled] = useState(false); 
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false); 
 
   // Carica dati da localStorage
   useEffect(() => {
@@ -135,10 +204,59 @@ export default function App() {
     }
   }, []);
 
+// Controlla stato notifiche
+    if ("Notification" in window) {
+      setNotificationsEnabled(Notification.permission === "granted");
+      
+      // Mostra prompt se non ha mai risposto
+      if (Notification.permission === "default") {
+        setTimeout(() => setShowNotificationPrompt(true), 3000);
+      }
+    }
+  }, []);
+
   // Salva dati in localStorage
   useEffect(() => {
     localStorage.setItem("miePiante", JSON.stringify(miePiante));
   }, [miePiante]);
+
+
+// Controlla piante da innaffiare quando cambiano
+    if (miePiante.length > 0 && notificationsEnabled) {
+      checkPlantsToWater(miePiante);
+    }
+  }, [miePiante, notificationsEnabled]);
+
+  // Controllo giornaliero notifiche
+  useEffect(() => {
+    if (!notificationsEnabled || miePiante.length === 0) return;
+
+    // Controlla ogni ora se ci sono piante da innaffiare
+    const interval = setInterval(() => {
+      checkPlantsToWater(miePiante);
+    }, 60 * 60 * 1000); // ogni ora
+
+    // Controlla subito all'avvio
+    checkPlantsToWater(miePiante);
+
+    return () => clearInterval(interval);
+  }, [miePiante, notificationsEnabled]);
+
+  // Abilita notifiche
+  const enableNotifications = async () => {
+    const granted = await requestNotificationPermission();
+    setNotificationsEnabled(granted);
+    setShowNotificationPrompt(false);
+    
+    if (granted) {
+      sendNotification(
+        '🎉 Notifiche attivate!',
+        'Ti avviseremo quando le tue piante hanno bisogno di acqua',
+        '🌿'
+      );
+    }
+  };
+
 
   // Aggiungi pianta
   const addPlant = (plant) => {
@@ -181,6 +299,14 @@ export default function App() {
   // Piante che necessitano acqua
   const plantsNeedWater = miePiante.filter(p => getDaysUntilWatering(p.nextWatering) <= 0);
 
+const plantsComingSoon = miePiante.filter(p => {
+    const days = getDaysUntilWatering(p.nextWatering);
+    return days > 0 && days <= 3;
+  }).sort((a, b) => 
+    new Date(a.nextWatering) - new Date(b.nextWatering)
+  );
+
+
   return (
     <div style={{ 
       minHeight: '100vh', 
@@ -188,6 +314,78 @@ export default function App() {
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       
+  {/* 🔔 PROMPT NOTIFICHE */}
+      {showNotificationPrompt && (
+        <div style={{
+          position: 'fixed',
+          top: 20,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 2000,
+          maxWidth: 380,
+          width: 'calc(100% - 40px)',
+          animation: 'slideDown 0.3s'
+        }}>
+          <div style={{
+            backgroundColor: COLORS.militaryGreen,
+            color: COLORS.creamWhite,
+            padding: '16px 20px',
+            borderRadius: 16,
+            boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: '24px' }}>🔔</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontWeight: 'bold', marginBottom: 4 }}>
+                  Attiva le notifiche
+                </div>
+                <div style={{ fontSize: '13px', opacity: 0.9 }}>
+                  Ti avviseremo quando le tue piante hanno bisogno di acqua
+                </div>
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={enableNotifications}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  backgroundColor: COLORS.creamWhite,
+                  color: COLORS.militaryGreen,
+                  border: 'none',
+                  borderRadius: 8,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Attiva
+              </button>
+              <button
+                onClick={() => setShowNotificationPrompt(false)}
+                style={{
+                  flex: 1,
+                  padding: '10px',
+                  backgroundColor: 'transparent',
+                  color: COLORS.creamWhite,
+                  border: `2px solid ${COLORS.creamWhite}`,
+                  borderRadius: 8,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Dopo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
       {/* 🎯 HEADER */}
       <div style={{
         background: `linear-gradient(135deg, ${COLORS.militaryGreen} 0%, ${COLORS.darkGreen} 100%)`,
@@ -205,6 +403,35 @@ export default function App() {
           }}>
             🌿 Casa Verde
           </h1>
+ 
+            {/* Pulsante Notifiche */}
+            <button
+              onClick={async () => {
+                if (notificationsEnabled) {
+                  alert('Le notifiche sono già attive! 🔔');
+                } else {
+                  await enableNotifications();
+                }
+              }}
+              style={{
+                padding: '8px 12px',
+                backgroundColor: notificationsEnabled 
+                  ? COLORS.accentGreen 
+                  : COLORS.creamWhite + '40',
+                color: COLORS.creamWhite,
+                border: 'none',
+                borderRadius: 8,
+                fontSize: '20px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+              title={notificationsEnabled ? 'Notifiche attive' : 'Attiva notifiche'}
+            >
+              {notificationsEnabled ? '🔔' : '🔕'}
+            </button>
+          </div>
           {plantsNeedWater.length > 0 && (
             <div style={{
               marginTop: '10px',
