@@ -1,208 +1,838 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-// 🌿 DATABASE COMPLETO
-const plantDB = [
-  { nome: "Monstera", giorniAcqua: 7 },
-  { nome: "Snake Plant", giorniAcqua: 10 },
-  { nome: "Parlor Palm", giorniAcqua: 5 },
-  { nome: "Pothos", giorniAcqua: 6 },
-  { nome: "Aloe Vera", giorniAcqua: 12 },
-
-  { nome: "Calathea", giorniAcqua: 5 },
-  { nome: "Zamioculcas", giorniAcqua: 20 },
-  { nome: "Dracaena", giorniAcqua: 12 },
-  { nome: "Cactus", giorniAcqua: 25 },
-  { nome: "Orchidea", giorniAcqua: 7 },
-  { nome: "Begonia", giorniAcqua: 6 },
-  { nome: "Anthurium", giorniAcqua: 7 },
-  { nome: "Kentia", giorniAcqua: 14 },
-  { nome: "Schefflera", giorniAcqua: 10 },
-  { nome: "Tradescantia", giorniAcqua: 6 },
-  { nome: "Peperomia", giorniAcqua: 8 },
-  { nome: "Fittonia", giorniAcqua: 4 },
-  { nome: "Dieffenbachia", giorniAcqua: 7 },
-  { nome: "Aglaonema", giorniAcqua: 10 },
-  { nome: "Hoya", giorniAcqua: 9 },
-  { nome: "Ficus Lyrata", giorniAcqua: 8 },
-  { nome: "Bonsai", giorniAcqua: 6 },
-  { nome: "Coleus", giorniAcqua: 5 },
-  { nome: "Lavanda", giorniAcqua: 12 },
-  { nome: "Rosmarino", giorniAcqua: 10 },
-  { nome: "Basilico", giorniAcqua: 3 },
-  { nome: "Salvia", giorniAcqua: 7 },
-  { nome: "Timo", giorniAcqua: 8 },
-  { nome: "Mentha", giorniAcqua: 4 },
-  { nome: "Edera", giorniAcqua: 7 },
-  { nome: "Philodendron", giorniAcqua: 7 },
-  { nome: "Maranta", giorniAcqua: 5 },
-  { nome: "Pilea", giorniAcqua: 6 },
-  { nome: "Alocasia", giorniAcqua: 6 },
-  { nome: "Oxalis", giorniAcqua: 5 },
-  { nome: "Croton", giorniAcqua: 7 },
-  { nome: "Cyclamen", giorniAcqua: 6 },
-  { nome: "Geranio", giorniAcqua: 5 },
-  { nome: "Petunia", giorniAcqua: 4 },
-  { nome: "Surfinia", giorniAcqua: 4 },
-  { nome: "Impatiens", giorniAcqua: 4 },
-  { nome: "Chlorophytum", giorniAcqua: 7 },
-  { nome: "Aspidistra", giorniAcqua: 14 },
-  { nome: "Kalanchoe", giorniAcqua: 10 },
-  { nome: "Sedum", giorniAcqua: 14 },
-  { nome: "Spider Plant", giorniAcqua: 6 },
-  { nome: "Peace Lily", giorniAcqua: 5 },
-  { nome: "Rubber Plant", giorniAcqua: 9 },
-  { nome: "Jade Plant", giorniAcqua: 12 },
-  { nome: "Areca Palm", giorniAcqua: 8 },
-  { nome: "Boston Fern", giorniAcqua: 5 },
-  { nome: "English Ivy", giorniAcqua: 7 },
-  { nome: "Money Tree", giorniAcqua: 8 },
-  { nome: "Air Plant", giorniAcqua: 5 },
-  { nome: "Chinese Evergreen", giorniAcqua: 9 }
-];
-
-// 📸 immagini automatiche
-const getPlantImage = (nome) => {
-  const images = {
-    Monstera: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6",
-    "Snake Plant": "https://images.unsplash.com/photo-1593691509543-c55fb32d8de5",
-    "Parlor Palm": "https://images.unsplash.com/photo-1615874959474-d609969a20ed",
-    Pothos: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b",
-    "Aloe Vera": "https://images.unsplash.com/photo-1587049352846-4a222e784d38",
-  };
-
-  return (
-    images[nome] ||
-    `https://source.unsplash.com/400x400/?${nome},plant`
-  );
+// 🎨 PALETTE COLORI
+const COLORS = {
+  militaryGreen: '#4A5D4F',
+  darkGreen: '#3A4D3F',
+  lightGreen: '#6B7F6F',
+  creamWhite: '#FFF8E7',
+  accentGreen: '#7A9B7F',
+  textDark: '#2C3E2F',
+  alertRed: '#C1666B'
 };
 
+// 🌿 DATABASE COMPLETO - PARTE 1
+const plantDB = [
+  { nome: "Monstera", nomeScientfico: "Monstera deliciosa", giorniAcqua: 7, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Pianta tropicale con foglie grandi e fenestrate", curiosita: ["Le foglie sviluppano i 'buchi' solo quando la pianta è matura", "In natura può crescere fino a 20 metri"], img: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400" },
+  { nome: "Snake Plant", nomeScientfico: "Sansevieria trifasciata", giorniAcqua: 14, luce: "Bassa-Alta", quantitaAcqua: "Molto poca", difficolta: "Molto Facile", caratteristiche: "Succulenta resistentissima, tollera la siccità", curiosita: ["Produce ossigeno anche di notte", "Può sopravvivere settimane senza acqua"], img: "https://images.unsplash.com/photo-1593691509543-c55fb32d8de5?w=400" },
+  { nome: "Pothos", nomeScientfico: "Epipremnum aureum", giorniAcqua: 10, luce: "Bassa-Media", quantitaAcqua: "Poca", difficolta: "Molto Facile", caratteristiche: "Pianta rampicante molto resistente", curiosita: ["Purifica l'aria rimuovendo tossine", "Può crescere anche in acqua"], img: "https://images.unsplash.com/photo-1593482892290-f54927ae1bb8?w=400" },
+  { nome: "Aloe Vera", nomeScientfico: "Aloe barbadensis", giorniAcqua: 14, luce: "Alta", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Succulenta con proprietà medicinali", curiosita: ["Il gel ha proprietà lenitive", "Può vivere fino a 100 anni"], img: "https://images.unsplash.com/photo-1596548438137-d51ea5c83ca5?w=400" },
+  { nome: "Ficus Lyrata", nomeScientfico: "Ficus lyrata", giorniAcqua: 7, luce: "Alta", quantitaAcqua: "Moderata", difficolta: "Media", caratteristiche: "Foglie grandi a forma di violino", curiosita: ["Originaria dell'Africa occidentale", "Non ama essere spostata"], img: "https://images.unsplash.com/photo-1614594895304-fe7116ac3b58?w=400" },
+  { nome: "Zamioculcas", nomeScientfico: "Zamioculcas zamiifolia", giorniAcqua: 20, luce: "Bassa-Media", quantitaAcqua: "Molto poca", difficolta: "Molto Facile", caratteristiche: "Pianta quasi indistruttibile", curiosita: ["Può sopravvivere mesi senza acqua", "Cresce molto lentamente"], img: "https://images.unsplash.com/photo-1632207691143-643e2a9a9361?w=400" },
+  { nome: "Pilea", nomeScientfico: "Pilea peperomioides", giorniAcqua: 7, luce: "Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie rotonde decorative", curiosita: ["Produce facilmente piantine figlie", "Originaria della Cina"], img: "https://images.unsplash.com/photo-1509423350716-97f9360b4e09?w=400" },
+  { nome: "Calathea", nomeScientfico: "Calathea spp.", giorniAcqua: 5, luce: "Media", quantitaAcqua: "Alta", difficolta: "Media", caratteristiche: "Foglie decorative con pattern unici", curiosita: ["Le foglie si muovono seguendo la luce", "Ama l'umidità elevata"], img: "https://images.unsplash.com/photo-1610824352934-c10d87b700cc?w=400" },
+  { nome: "Dracaena", nomeScientfico: "Dracaena marginata", giorniAcqua: 10, luce: "Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Pianta slanciata con foglie sottili", curiosita: ["Può crescere fino a 6 metri", "Ottima per purificare l'aria"], img: "https://images.unsplash.com/photo-1591958911259-bee2173bdccc?w=400" },
+  { nome: "Peace Lily", nomeScientfico: "Spathiphyllum", giorniAcqua: 7, luce: "Bassa-Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Fiori bianchi eleganti", curiosita: ["Ti avvisa quando ha sete", "Rimuove formaldeide dall'aria"], img: "https://images.unsplash.com/photo-1593482892290-f54927ae1bb8?w=400" },
+  { nome: "Cactus", nomeScientfico: "Cactaceae", giorniAcqua: 25, luce: "Alta", quantitaAcqua: "Molto poca", difficolta: "Molto Facile", caratteristiche: "Succulenta spinosa", curiosita: ["Può immagazzinare acqua per mesi", "Alcune specie vivono oltre 200 anni"], img: "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400" },
+  { nome: "Philodendron", nomeScientfico: "Philodendron hederaceum", giorniAcqua: 7, luce: "Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Rampicante con foglie a cuore", curiosita: ["Può crescere diversi metri", "Molto facile da propagare"], img: "https://images.unsplash.com/photo-1597689218583-c0e5e5e8c9e7?w=400" },
+  { nome: "Maranta", nomeScientfico: "Maranta leuconeura", giorniAcqua: 5, luce: "Media", quantitaAcqua: "Alta", difficolta: "Media", caratteristiche: "Pianta della preghiera", curiosita: ["Le foglie si alzano di notte", "Ama l'umidità tropicale"], img: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400" },
+  { nome: "Chlorophytum", nomeScientfico: "Chlorophytum comosum", giorniAcqua: 7, luce: "Media", quantitaAcqua: "Moderata", difficolta: "Molto Facile", caratteristiche: "Pianta ragno con foglie striate", curiosita: ["Produce piantine aeree", "Purifica l'aria"], img: "https://images.unsplash.com/photo-1610824352934-c10d87b700cc?w=400" },
+  { nome: "Begonia", nomeScientfico: "Begonia rex", giorniAcqua: 6, luce: "Media", quantitaAcqua: "Moderata", difficolta: "Media", caratteristiche: "Foglie colorate decorative", curiosita: ["Esistono oltre 1800 specie", "Alcune hanno foglie metalliche"], img: "https://images.unsplash.com/photo-1591958911259-bee2173bdccc?w=400" },
+  { nome: "Peperomia", nomeScientfico: "Peperomia obtusifolia", giorniAcqua: 10, luce: "Media", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Pianta compatta con foglie carnose", curiosita: ["Esistono oltre 1000 varietà", "Foglie immagazzinano acqua"], img: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400" },
+  { nome: "Aglaonema", nomeScientfico: "Aglaonema commutatum", giorniAcqua: 10, luce: "Bassa-Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie variegate", curiosita: ["Perfetta per uffici", "Purifica l'aria da benzene"], img: "https://images.unsplash.com/photo-1598880940371-c756e015faf4?w=400" },
+  { nome: "Anthurium", nomeScientfico: "Anthurium andraeanum", giorniAcqua: 7, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Media", caratteristiche: "Fiori rossi a forma di cuore", curiosita: ["I 'fiori' sono foglie modificate", "Può fiorire tutto l'anno"], img: "https://images.unsplash.com/photo-1614594895304-fe7116ac3b58?w=400" },
+  { nome: "Schefflera", nomeScientfico: "Schefflera arboricola", giorniAcqua: 10, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie a ombrello", curiosita: ["Può diventare un piccolo albero", "Tollera potature drastiche"], img: "https://images.unsplash.com/photo-1632207691143-643e2a9a9361?w=400" },
+  { nome: "Rubber Plant", nomeScientfico: "Ficus elastica", giorniAcqua: 9, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie grandi lucide", curiosita: ["Veniva usata per produrre gomma", "Purifica l'aria efficacemente"], img: "https://images.unsplash.com/photo-1598880940371-c756e015faf4?w=400" },
+  { nome: "Orchidea", nomeScientfico: "Phalaenopsis", giorniAcqua: 7, luce: "Media", quantitaAcqua: "Poca", difficolta: "Media", caratteristiche: "Fiori eleganti e duraturi", curiosita: ["Può rifiorire più volte", "Le radici aeree sono normali"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" },
+  { nome: "Tradescantia", nomeScientfico: "Tradescantia zebrina", giorniAcqua: 6, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie striate viola e argento", curiosita: ["Cresce molto velocemente", "Facile da propagare in acqua"], img: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400" },
+  { nome: "Fittonia", nomeScientfico: "Fittonia albivenis", giorniAcqua: 4, luce: "Bassa-Media", quantitaAcqua: "Alta", difficolta: "Media", caratteristiche: "Foglie con venature colorate", curiosita: ["Chiamata 'pianta mosaico'", "Ama l'umidità elevata"], img: "https://images.unsplash.com/photo-1610824352934-c10d87b700cc?w=400" },
+  { nome: "Dieffenbachia", nomeScientfico: "Dieffenbachia seguine", giorniAcqua: 7, luce: "Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie grandi variegate", curiosita: ["Può crescere molto alta", "Purifica l'aria"], img: "https://images.unsplash.com/photo-1598880940371-c756e015faf4?w=400" },
+  { nome: "Hoya", nomeScientfico: "Hoya carnosa", giorniAcqua: 9, luce: "Media-Alta", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Fiori cerosi profumati", curiosita: ["I fiori producono nettare", "Può vivere decenni"], img: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400" },
+  { nome: "Bonsai", nomeScientfico: "Varie specie", giorniAcqua: 6, luce: "Alta", quantitaAcqua: "Moderata", difficolta: "Difficile", caratteristiche: "Albero in miniatura", curiosita: ["Richiede potature regolari", "Può vivere centinaia di anni"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" },
+  { nome: "Coleus", nomeScientfico: "Plectranthus scutellarioides", giorniAcqua: 5, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie colorate vivaci", curiosita: ["Disponibile in molti colori", "Cresce velocemente"], img: "https://images.unsplash.com/photo-1591958911259-bee2173bdccc?w=400" },
+  { nome: "Lavanda", nomeScientfico: "Lavandula angustifolia", giorniAcqua: 12, luce: "Alta", quantitaAcqua: "Poca", difficolta: "Media", caratteristiche: "Aromatica con fiori viola", curiosita: ["Profumo rilassante", "Attira le api"], img: "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400" },
+   // ... continua da PARTE 1
+  { nome: "Rosmarino", nomeScientfico: "Rosmarinus officinalis", giorniAcqua: 10, luce: "Alta", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Aromatica sempreverde", curiosita: ["Ottimo in cucina", "Migliora la memoria"], img: "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400" },
+  { nome: "Basilico", nomeScientfico: "Ocimum basilicum", giorniAcqua: 3, luce: "Alta", quantitaAcqua: "Alta", difficolta: "Facile", caratteristiche: "Aromatica annuale", curiosita: ["Essenziale per il pesto", "Repellente per zanzare"], img: "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400" },
+  { nome: "Salvia", nomeScientfico: "Salvia officinalis", giorniAcqua: 7, luce: "Alta", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Aromatica perenne", curiosita: ["Proprietà digestive", "Foglie vellutate"], img: "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400" },
+  { nome: "Timo", nomeScientfico: "Thymus vulgaris", giorniAcqua: 8, luce: "Alta", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Aromatica tappezzante", curiosita: ["Proprietà antisettiche", "Attira le api"], img: "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400" },
+  { nome: "Menta", nomeScientfico: "Mentha", giorniAcqua: 4, luce: "Media", quantitaAcqua: "Alta", difficolta: "Molto Facile", caratteristiche: "Aromatica invasiva", curiosita: ["Cresce molto velocemente", "Ottima per tisane"], img: "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400" },
+  { nome: "Edera", nomeScientfico: "Hedera helix", giorniAcqua: 7, luce: "Bassa-Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Rampicante sempreverde", curiosita: ["Purifica l'aria", "Può vivere centinaia di anni"], img: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400" },
+  { nome: "Alocasia", nomeScientfico: "Alocasia amazonica", giorniAcqua: 6, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Media", caratteristiche: "Foglie grandi a forma di freccia", curiosita: ["Chiamata 'orecchie di elefante'", "Ama l'umidità"], img: "https://images.unsplash.com/photo-1610824352934-c10d87b700cc?w=400" },
+  { nome: "Oxalis", nomeScientfico: "Oxalis triangularis", giorniAcqua: 5, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie viola a forma di farfalla", curiosita: ["Le foglie si chiudono di notte", "Fiori delicati rosa"], img: "https://images.unsplash.com/photo-1591958911259-bee2173bdccc?w=400" },
+  { nome: "Croton", nomeScientfico: "Codiaeum variegatum", giorniAcqua: 7, luce: "Alta", quantitaAcqua: "Moderata", difficolta: "Media", caratteristiche: "Foglie multicolori", curiosita: ["Colori cambiano con la luce", "Originario dell'Asia"], img: "https://images.unsplash.com/photo-1598880940371-c756e015faf4?w=400" },
+  { nome: "Ciclamino", nomeScientfico: "Cyclamen persicum", giorniAcqua: 6, luce: "Media", quantitaAcqua: "Moderata", difficolta: "Media", caratteristiche: "Fiori colorati invernali", curiosita: ["Fiorisce in inverno", "Preferisce il fresco"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" },
+  { nome: "Geranio", nomeScientfico: "Pelargonium", giorniAcqua: 5, luce: "Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Fiori abbondanti", curiosita: ["Repellente per zanzare", "Fiorisce tutta l'estate"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" },
+  { nome: "Petunia", nomeScientfico: "Petunia x hybrida", giorniAcqua: 4, luce: "Alta", quantitaAcqua: "Alta", difficolta: "Facile", caratteristiche: "Fiori a trombetta colorati", curiosita: ["Fioritura prolungata", "Profumo serale"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" },
+  { nome: "Surfinia", nomeScientfico: "Petunia pendula", giorniAcqua: 4, luce: "Alta", quantitaAcqua: "Alta", difficolta: "Facile", caratteristiche: "Cascata di fiori", curiosita: ["Perfetta per vasi sospesi", "Fioritura abbondante"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" },
+  { nome: "Impatiens", nomeScientfico: "Impatiens walleriana", giorniAcqua: 4, luce: "Bassa-Media", quantitaAcqua: "Alta", difficolta: "Facile", caratteristiche: "Fiori colorati per ombra", curiosita: ["Tollera l'ombra", "Fioritura continua"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" },
+  { nome: "Aspidistra", nomeScientfico: "Aspidistra elatior", giorniAcqua: 14, luce: "Bassa", quantitaAcqua: "Poca", difficolta: "Molto Facile", caratteristiche: "Pianta di ferro", curiosita: ["Quasi indistruttibile", "Tollera il buio"], img: "https://images.unsplash.com/photo-1598880940371-c756e015faf4?w=400" },
+  { nome: "Kalanchoe", nomeScientfico: "Kalanchoe blossfeldiana", giorniAcqua: 10, luce: "Alta", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Succulenta con fiori colorati", curiosita: ["Fiori durano settimane", "Facile da propagare"], img: "https://images.unsplash.com/photo-1596548438137-d51ea5c83ca5?w=400" },
+  { nome: "Sedum", nomeScientfico: "Sedum morganianum", giorniAcqua: 14, luce: "Alta", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Succulenta pendente", curiosita: ["Chiamata 'coda di asino'", "Foglie carnose"], img: "https://images.unsplash.com/photo-1596548438137-d51ea5c83ca5?w=400" },
+  { nome: "Jade Plant", nomeScientfico: "Crassula ovata", giorniAcqua: 12, luce: "Alta", quantitaAcqua: "Poca", difficolta: "Facile", caratteristiche: "Albero di giada", curiosita: ["Porta fortuna", "Può vivere decenni"], img: "https://images.unsplash.com/photo-1596548438137-d51ea5c83ca5?w=400" },
+  { nome: "Areca Palm", nomeScientfico: "Dypsis lutescens", giorniAcqua: 8, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Palma elegante", curiosita: ["Purifica l'aria", "Cresce velocemente"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" },
+  { nome: "Boston Fern", nomeScientfico: "Nephrolepis exaltata", giorniAcqua: 5, luce: "Media", quantitaAcqua: "Alta", difficolta: "Media", caratteristiche: "Felce rigogliosa", curiosita: ["Ama l'umidità", "Purifica l'aria"], img: "https://images.unsplash.com/photo-1610824352934-c10d87b700cc?w=400" },
+  { nome: "English Ivy", nomeScientfico: "Hedera helix", giorniAcqua: 7, luce: "Bassa-Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Edera classica", curiosita: ["Purifica l'aria", "Cresce rapidamente"], img: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400" },
+  { nome: "Money Tree", nomeScientfico: "Pachira aquatica", giorniAcqua: 8, luce: "Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Tronco intrecciato", curiosita: ["Simbolo di prosperità", "Foglie a 5 punte"], img: "https://images.unsplash.com/photo-1632207691143-643e2a9a9361?w=400" },
+  { nome: "Air Plant", nomeScientfico: "Tillandsia", giorniAcqua: 5, luce: "Media-Alta", quantitaAcqua: "Nebulizzazione", difficolta: "Media", caratteristiche: "Pianta senza terra", curiosita: ["Assorbe acqua dall'aria", "Non serve vaso"], img: "https://images.unsplash.com/photo-1509587584298-0f3b3a3a1797?w=400" },
+  { nome: "Chinese Evergreen", nomeScientfico: "Aglaonema", giorniAcqua: 9, luce: "Bassa-Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Foglie variegate", curiosita: ["Tollera poca luce", "Purifica l'aria"], img: "https://images.unsplash.com/photo-1598880940371-c756e015faf4?w=400" },
+  { nome: "Kentia", nomeScientfico: "Howea forsteriana", giorniAcqua: 14, luce: "Bassa-Media", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Palma elegante", curiosita: ["Cresce lentamente", "Può vivere oltre 100 anni"], img: "https://images.unsplash.com/photo-1615874959474-d609969a20ed?w=400" }
+];
+
+// 🧮 FUNZIONI UTILITÀ
+const getDaysUntilWatering = (nextWatering) => {
+  const days = Math.ceil((new Date(nextWatering) - new Date()) / (1000 * 60 * 60 * 24));
+  return days;
+};
+
+const getLightIcon = (luce) => {
+  if (luce.includes("Alta")) return "☀️";
+  if (luce.includes("Media")) return "⛅";
+  return "☁️";
+};
+
+const getWaterIcon = (quantita) => {
+  if (quantita === "Molto poca") return "💧";
+  if (quantita === "Poca") return "💧💧";
+  if (quantita === "Moderata") return "💧💧💧";
+  return "💧💧💧💧";
+};
+
+// 📱 COMPONENTE PRINCIPALE
 export default function App() {
   const [miePiante, setMiePiante] = useState([]);
   const [tab, setTab] = useState("mie");
+  const [selectedPlant, setSelectedPlant] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Carica dati da localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("miePiante");
+    if (saved) {
+      setMiePiante(JSON.parse(saved));
+    }
+  }, []);
+
+  // Salva dati in localStorage
+  useEffect(() => {
+    localStorage.setItem("miePiante", JSON.stringify(miePiante));
+  }, [miePiante]);
+
+  // Aggiungi pianta
+  const addPlant = (plant) => {
+    const newPlant = {
+      ...plant,
+      myId: Date.now(),
+      lastWatered: new Date().toISOString(),
+      nextWatering: new Date(Date.now() + plant.giorniAcqua * 24 * 60 * 60 * 1000).toISOString()
+    };
+    setMiePiante([...miePiante, newPlant]);
+  };
+
+  // Rimuovi pianta
+  const removePlant = (myId) => {
+    setMiePiante(miePiante.filter(p => p.myId !== myId));
+    setSelectedPlant(null);
+  };
+
+  // Innaffia pianta
+  const waterPlant = (myId) => {
+    setMiePiante(miePiante.map(p => {
+      if (p.myId === myId) {
+        return {
+          ...p,
+          lastWatered: new Date().toISOString(),
+          nextWatering: new Date(Date.now() + p.giorniAcqua * 24 * 60 * 60 * 1000).toISOString()
+        };
+      }
+      return p;
+    }));
+  };
+  // ... continua da PARTE 2
+  
+  // Filtra piante per ricerca
+  const filteredPlants = plantDB.filter(p => 
+    p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.nomeScientfico.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // Piante che necessitano acqua
+  const plantsNeedWater = miePiante.filter(p => getDaysUntilWatering(p.nextWatering) <= 0);
 
   return (
-    <div style={{ padding: 20, maxWidth: 420, margin: "auto" }}>
+    <div style={{ 
+      minHeight: '100vh', 
+      backgroundColor: COLORS.creamWhite,
+      fontFamily: 'system-ui, -apple-system, sans-serif'
+    }}>
       
-      <h1>Casa Verde 🌿</h1>
-
-      {/* MENU */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          marginBottom: 20,
-        }}
-      >
-        {["mie", "plantario", "todo"].map((t) => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              flex: 1,
-              margin: "0 5px",
-              padding: 10,
-              borderRadius: 10,
-              background: tab === t ? "#2D6A4F" : "#eee",
-              color: tab === t ? "white" : "black",
-              border: "none",
-            }}
-          >
-            {t === "mie"
-              ? "Le tue piante"
-              : t === "plantario"
-              ? "Plantario"
-              : "To‑Do"}
-          </button>
-        ))}
+      {/* 🎯 HEADER */}
+      <div style={{
+        background: `linear-gradient(135deg, ${COLORS.militaryGreen} 0%, ${COLORS.darkGreen} 100%)`,
+        padding: '20px',
+        boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
+      }}>
+        <div style={{ maxWidth: 420, margin: '0 auto' }}>
+          <h1 style={{ 
+            color: COLORS.creamWhite, 
+            margin: 0,
+            fontSize: '28px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            🌿 Casa Verde
+          </h1>
+          {plantsNeedWater.length > 0 && (
+            <div style={{
+              marginTop: '10px',
+              padding: '8px 12px',
+              backgroundColor: COLORS.alertRed,
+              borderRadius: '8px',
+              color: COLORS.creamWhite,
+              fontSize: '14px',
+              fontWeight: 'bold'
+            }}>
+              ⚠️ {plantsNeedWater.length} pianta{plantsNeedWater.length > 1 ? 'e' : ''} da innaffiare!
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* MIE PIANTE */}
-      {tab === "mie" && (
-        <>
-          <h2>Le tue piante</h2>
-
-          {miePiante.map((p, i) => (
-            <div
-              key={i}
+      {/* 📱 MENU TABS */}
+      <div style={{ 
+        maxWidth: 420, 
+        margin: '0 auto',
+        padding: '20px 20px 0'
+      }}>
+        <div style={{
+          display: 'flex',
+          gap: '10px',
+          marginBottom: 20
+        }}>
+          {[
+            { id: 'mie', label: '🏠 Le Mie', count: miePiante.length },
+            { id: 'plantario', label: '📚 Plantario', count: plantDB.length },
+            { id: 'todo', label: '✅ To-Do', count: plantsNeedWater.length }
+          ].map(t => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
               style={{
-                display: "flex",
-                gap: 10,
-                padding: 10,
-                border: "1px solid #ddd",
-                borderRadius: 10,
-                marginTop: 10,
-                alignItems: "center",
+                flex: 1,
+                padding: '12px',
+                borderRadius: 12,
+                border: 'none',
+                background: tab === t.id ? COLORS.militaryGreen : COLORS.lightGreen + '40',
+                color: tab === t.id ? COLORS.creamWhite : COLORS.textDark,
+                fontWeight: tab === t.id ? 'bold' : 'normal',
+                fontSize: '14px',
+                cursor: 'pointer',
+                transition: 'all 0.3s',
+                boxShadow: tab === t.id ? '0 4px 8px rgba(0,0,0,0.15)' : 'none'
               }}
             >
-              <img
-                src={p.img}
-                style={{ width: 60, height: 60, borderRadius: 10 }}
-              />
-
-              <div style={{ flex: 1 }}>
-                <b>{p.nome}</b>
-                <p>💧 ogni {p.giorniAcqua} giorni</p>
-              </div>
-            </div>
+              {t.label}
+              {t.count > 0 && (
+                <span style={{
+                  marginLeft: '6px',
+                  backgroundColor: tab === t.id ? COLORS.accentGreen : COLORS.militaryGreen,
+                  color: COLORS.creamWhite,
+                  padding: '2px 8px',
+                  borderRadius: '10px',
+                  fontSize: '12px',
+                  fontWeight: 'bold'
+                }}>
+                  {t.count}
+                </span>
+              )}
+            </button>
           ))}
-        </>
-      )}
+        </div>
+      </div>
 
-      {/* PLANTARIO */}
-      {tab === "plantario" && (
-        <>
-          <h2>Plantario</h2>
+      {/* 📄 CONTENUTO */}
+      <div style={{ 
+        maxWidth: 420, 
+        margin: '0 auto',
+        padding: '0 20px 20px'
+      }}>
 
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 10 }}>
-            {plantDB.map((p, i) => (
-              <div
-                key={i}
+        {/* 🏠 LE MIE PIANTE */}
+        {tab === 'mie' && (
+          <>
+            {miePiante.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '60px 20px',
+                color: COLORS.lightGreen
+              }}>
+                <div style={{ fontSize: '80px', marginBottom: '20px' }}>🌱</div>
+                <h2 style={{ color: COLORS.textDark, marginBottom: '10px' }}>Nessuna pianta ancora</h2>
+                <p>Vai al Plantario per aggiungerne una!</p>
+              </div>
+            ) : (
+              miePiante.map(p => {
+                const daysLeft = getDaysUntilWatering(p.nextWatering);
+                const needsWater = daysLeft <= 0;
+                
+                return (
+                  <div
+                    key={p.myId}
+                    onClick={() => setSelectedPlant(p)}
+                    style={{
+                      display: 'flex',
+                      gap: 15,
+                      padding: 15,
+                      marginBottom: 15,
+                      borderRadius: 16,
+                      backgroundColor: COLORS.creamWhite,
+                      border: `2px solid ${needsWater ? COLORS.alertRed : COLORS.lightGreen}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.3s',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <img
+                      src={p.img}
+                      alt={p.nome}
+                      style={{
+                        width: 80,
+                        height: 80,
+                        borderRadius: 12,
+                        objectFit: 'cover',
+                        border: `3px solid ${COLORS.accentGreen}`
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ 
+                        margin: '0 0 8px 0', 
+                        color: COLORS.textDark,
+                        fontSize: '18px'
+                      }}>
+                        {p.nome}
+                      </h3>
+                      <div style={{ 
+                        fontSize: '13px', 
+                        color: COLORS.textDark,
+                        marginBottom: '8px'
+                      }}>
+                        {getLightIcon(p.luce)} {p.luce} • {getWaterIcon(p.quantitaAcqua)} {p.quantitaAcqua}
+                      </div>
+                      {needsWater ? (
+                        <div style={{
+                          display: 'inline-block',
+                          padding: '6px 12px',
+                          backgroundColor: COLORS.alertRed,
+                          color: COLORS.creamWhite,
+                          borderRadius: 8,
+                          fontSize: '13px',
+                          fontWeight: 'bold'
+                        }}>
+                          💧 Innaffia ora!
+                        </div>
+                      ) : (
+                        <div style={{
+                          fontSize: '13px',
+                          color: COLORS.lightGreen,
+                          fontWeight: '500'
+                        }}>
+                          Prossima innaffiatura: {daysLeft} {daysLeft === 1 ? 'giorno' : 'giorni'}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </>
+        )}
+
+        {/* 📚 PLANTARIO */}
+        {tab === 'plantario' && (
+          <>
+            <input
+              type="text"
+              placeholder="🔍 Cerca pianta..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                marginBottom: 20,
+                borderRadius: 12,
+                border: `2px solid ${COLORS.lightGreen}`,
+                fontSize: '16px',
+                backgroundColor: COLORS.creamWhite,
+                color: COLORS.textDark,
+                outline: 'none'
+              }}
+            />
+            
+            <div style={{ 
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: 15
+            }}>
+              {filteredPlants.map(p => (
+                <div
+                  key={p.nome}
+                  onClick={() => setSelectedPlant(p)}
+                  style={{
+                    borderRadius: 16,
+                    overflow: 'hidden',
+                    backgroundColor: COLORS.creamWhite,
+                    border: `2px solid ${COLORS.lightGreen}`,
+                    cursor: 'pointer',
+                    transition: 'all 0.3s',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <img
+                    src={p.img}
+                    alt={p.nome}
+                    style={{
+                      width: '100%',
+                      height: 140,
+                      objectFit: 'cover'
+                    }}
+                  />
+                  <div style={{ padding: 12 }}>
+                    <h4 style={{ 
+                      margin: '0 0 6px 0',
+                      color: COLORS.textDark,
+                      fontSize: '15px'
+                    }}>
+                      {p.nome}
+                    </h4>
+                    <div style={{
+                      fontSize: '11px',
+                      color: COLORS.lightGreen,
+                      marginBottom: 8
+                    }}>
+                      {p.nomeScientfico}
+                    </div>
+                    <div style={{
+                      display: 'inline-block',
+                      padding: '4px 8px',
+                      backgroundColor: COLORS.accentGreen + '30',
+                      color: COLORS.textDark,
+                      borderRadius: 6,
+                      fontSize: '11px',
+                      fontWeight: 'bold'
+                    }}>
+                      {p.difficolta}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* ✅ TO-DO */}
+        {tab === 'todo' && (
+          <>
+            {plantsNeedWater.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                padding: '60px 20px',
+                color: COLORS.lightGreen
+              }}>
+                <div style={{ fontSize: '80px', marginBottom: '20px' }}>✅</div>
+                <h2 style={{ color: COLORS.textDark, marginBottom: '10px' }}>Tutto fatto!</h2>
+                <p>Nessuna pianta ha bisogno di acqua oggi</p>
+              </div>
+            ) : (
+              <>
+                <h2 style={{ 
+                  color: COLORS.textDark,
+                  marginBottom: 20,
+                  fontSize: '20px'
+                }}>
+                  Piante da innaffiare oggi
+                </h2>
+                {plantsNeedWater.map(p => (
+                  <div
+                    key={p.myId}
+                    style={{
+                      display: 'flex',
+                      gap: 15,
+                      padding: 15,
+                      marginBottom: 15,
+                      borderRadius: 16,
+                      backgroundColor: COLORS.creamWhite,
+                      border: `2px solid ${COLORS.alertRed}`,
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
+                    }}
+                  >
+                    <img
+                      src={p.img}
+                      alt={p.nome}
+                      style={{
+                        width: 70,
+                        height: 70,
+                        borderRadius: 12,
+                        objectFit: 'cover'
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <h3 style={{ 
+                        margin: '0 0 8px 0',
+                        color: COLORS.textDark,
+                        fontSize: '16px'
+                      }}>
+                        {p.nome}
+                      </h3>
+                      <div style={{
+                        fontSize: '13px',
+                        color: COLORS.alertRed,
+                        marginBottom: 10,
+                        fontWeight: 'bold'
+                      }}>
+                        💧 Necessita acqua ora!
+                      </div>
+                      <button
+                        onClick={() => waterPlant(p.myId)}
+                        style={{
+                          padding: '8px 16px',
+                          backgroundColor: COLORS.militaryGreen,
+                          color: COLORS.creamWhite,
+                          border: 'none',
+                          borderRadius: 8,
+                          fontSize: '13px',
+                          fontWeight: 'bold',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        ✓ Ho innaffiato
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </>
+            )}
+          </>
+        )}
+      </div>
+
+      {/* 🔍 MODAL DETTAGLIO PIANTA */}
+      {selectedPlant && (
+        <div
+          onClick={() => setSelectedPlant(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'center',
+            zIndex: 1000,
+            animation: 'fadeIn 0.3s'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: COLORS.creamWhite,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              maxWidth: 500,
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              animation: 'slideUp 0.3s'
+            }}
+          >
+            {/* Header Modal */}
+            <div style={{
+              position: 'sticky',
+              top: 0,
+              backgroundColor: COLORS.militaryGreen,
+              padding: '20px',
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center'
+            }}>
+              <h2 style={{ 
+                color: COLORS.creamWhite,
+                margin: 0,
+                fontSize: '22px'
+              }}>
+                {selectedPlant.nome}
+              </h2>
+              <button
+                onClick={() => setSelectedPlant(null)}
                 style={{
-                  width: "45%",
-                  border: "1px solid #ddd",
-                  borderRadius: 10,
-                  padding: 10,
-                  textAlign: "center",
+                  background: 'none',
+                  border: 'none',
+                  color: COLORS.creamWhite,
+                  fontSize: '28px',
+                  cursor: 'pointer',
+                  padding: 0,
+                  lineHeight: 1
                 }}
               >
-                <img
-                  src={getPlantImage(p.nome)}
-                  style={{ width: "100%", borderRadius: 10 }}
-                />
-
-                <div>{p.nome}</div>
-
-                <button
-                  onClick={() => {
-                    setMiePiante((prev) => {
-                      if (prev.some((x) => x.nome === p.nome)) return prev;
-                      return [
-                        ...prev,
-                        { ...p, img: getPlantImage(p.nome) }
-                      ];
-                    });
-                  }}
-                >
-                  ➕ Aggiungi
-                </button>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {/* TODO */}
-      {tab === "todo" && (
-        <>
-          <h2>To‑Do</h2>
-
-          {miePiante.map((p, i) => (
-            <div key={i} style={{ marginTop: 10 }}>
-              {p.nome} → tra {p.giorniAcqua} giorni
+                ×
+              </button>
             </div>
-          ))}
-        </>
+
+            {/* Immagine */}
+            <img
+              src={selectedPlant.img}
+              alt={selectedPlant.nome}
+              style={{
+                width: '100%',
+                height: 250,
+                objectFit: 'cover'
+              }}
+            />
+
+            {/* Contenuto */}
+            <div style={{ padding: 20 }}>
+              
+              {/* Nome Scientifico */}
+              <div style={{
+                fontSize: '14px',
+                color: COLORS.lightGreen,
+                fontStyle: 'italic',
+                marginBottom: 15
+              }}>
+                {selectedPlant.nomeScientfico}
+              </div>
+
+              {/* Badge Difficoltà */}
+              <div style={{
+                display: 'inline-block',
+                padding: '6px 12px',
+                backgroundColor: COLORS.accentGreen + '30',
+                color: COLORS.textDark,
+                borderRadius: 8,
+                fontSize: '13px',
+                fontWeight: 'bold',
+                marginBottom: 20
+              }}>
+                Difficoltà: {selectedPlant.difficolta}
+              </div>
+
+              {/* Caratteristiche */}
+              <div style={{
+                backgroundColor: COLORS.lightGreen + '20',
+                padding: 15,
+                borderRadius: 12,
+                marginBottom: 20
+              }}>
+                <h3 style={{
+                  margin: '0 0 10px 0',
+                  color: COLORS.textDark,
+                  fontSize: '16px'
+                }}>
+                  📝 Caratteristiche
+                </h3>
+                <p style={{
+                  margin: 0,
+                  color: COLORS.textDark,
+                  lineHeight: 1.6
+                }}>
+                  {selectedPlant.caratteristiche}
+                </p>
+              </div>
+
+              {/* Esigenze */}
+              <div style={{
+                backgroundColor: COLORS.lightGreen + '20',
+                padding: 15,
+                borderRadius: 12,
+                marginBottom: 20
+              }}>
+                <h3 style={{
+                  margin: '0 0 15px 0',
+                  color: COLORS.textDark,
+                  fontSize: '16px'
+                }}>
+                  🌱 Esigenze
+                </h3>
+                
+                <div style={{ marginBottom: 12 }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    marginBottom: 8
+                  }}>
+                    <span style={{ fontSize: '20px' }}>{getLightIcon(selectedPlant.luce)}</span>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: COLORS.textDark }}>Luce</div>
+                      <div style={{ fontSize: '14px', color: COLORS.lightGreen }}>{selectedPlant.luce}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    marginBottom: 8
+                  }}>
+                    <span style={{ fontSize: '20px' }}>{getWaterIcon(selectedPlant.quantitaAcqua)}</span>
+                    <div>
+                      <div style={{ fontWeight: 'bold', color: COLORS.textDark }}>Acqua</div>
+                      <div style={{ fontSize: '14px', color: COLORS.lightGreen }}>
+                        {selectedPlant.quantitaAcqua} (ogni {selectedPlant.giorniAcqua} giorni)
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Curiosità */}
+              <div style={{
+                backgroundColor: COLORS.accentGreen + '20',
+                padding: 15,
+                borderRadius: 12,
+                marginBottom: 20
+              }}>
+                <h3 style={{
+                  margin: '0 0 15px 0',
+                  color: COLORS.textDark,
+                  fontSize: '16px'
+                }}>
+                  💡 Lo sapevi che...
+                </h3>
+                {selectedPlant.curiosita.map((fact, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      gap: 10,
+                      marginBottom: i < selectedPlant.curiosita.length - 1 ? 12 : 0
+                    }}
+                  >
+                    <span style={{ fontSize: '16px' }}>•</span>
+                    <p style={{
+                      margin: 0,
+                      color: COLORS.textDark,
+                      lineHeight: 1.5,
+                      fontSize: '14px'
+                    }}>
+                      {fact}
+                    </p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Pulsanti Azione */}
+              <div style={{
+                display: 'flex',
+                gap: 10,
+                marginTop: 20
+              }}>
+                {selectedPlant.myId ? (
+                  <>
+                    <button
+                      onClick={() => {
+                        waterPlant(selectedPlant.myId);
+                        setSelectedPlant(null);
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '14px',
+                        backgroundColor: COLORS.militaryGreen,
+                        color: COLORS.creamWhite,
+                        border: 'none',
+                        borderRadius: 12,
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      💧 Ho innaffiato
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (confirm(`Rimuovere ${selectedPlant.nome}?`)) {
+                          removePlant(selectedPlant.myId);
+                        }
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '14px',
+                        backgroundColor: COLORS.alertRed,
+                        color: COLORS.creamWhite,
+                        border: 'none',
+                        borderRadius: 12,
+                        fontSize: '15px',
+                        fontWeight: 'bold',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 8
+                      }}
+                    >
+                      🗑️ Rimuovi
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => {
+                      addPlant(selectedPlant);
+                      setSelectedPlant(null);
+                    }}
+                    disabled={miePiante.some(p => p.nome === selectedPlant.nome)}
+                    style={{
+                      width: '100%',
+                      padding: '14px',
+                      backgroundColor: miePiante.some(p => p.nome === selectedPlant.nome) 
+                        ? COLORS.lightGreen 
+                        : COLORS.militaryGreen,
+                      color: COLORS.creamWhite,
+                      border: 'none',
+                      borderRadius: 12,
+                      fontSize: '15px',
+                      fontWeight: 'bold',
+                      cursor: miePiante.some(p => p.nome === selectedPlant.nome) 
+                        ? 'not-allowed' 
+                        : 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8
+                    }}
+                  >
+                    {miePiante.some(p => p.nome === selectedPlant.nome) 
+                      ? '✓ Già aggiunta' 
+                      : '➕ Aggiungi alle mie piante'}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
+
+      {/* 🎨 ANIMAZIONI CSS */}
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes slideUp {
+          from { transform: translateY(100%); }
+          to { transform: translateY(0); }
+        }
+        * {
+          box-sizing: border-box;
+        }
+        body {
+          margin: 0;
+          padding: 0;
+        }
+      `}</style>
     </div>
   );
 }
