@@ -289,7 +289,7 @@ export default function App() {
 
 
 
-      fontFamily: 'system-ui, -apple-system, sans-serif'
+      fontFamily: 'system-ui, -apple-system, sans-serif',
        display: 'flex',
     flexDirection: 'column',
     alignItems: 'center'
