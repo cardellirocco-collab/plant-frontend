@@ -53,7 +53,7 @@ self.addEventListener('push', (event) => {
   };
 
   event.waitUntil(
-    self.registration.showNotification('Casa Verde 🌿', options)
+    self.registration.showNotification('Green House 🪴🏡', options)
   );
 });
 
