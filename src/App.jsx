@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-// 🎨 PALETTE COLORI (rimane uguale)
+// 🎨 PALETTE COLORI
 const COLORS = {
   militaryGreen: '#4A5D4F',
   darkGreen: '#3A4D3F',
@@ -43,20 +43,11 @@ const sendNotification = (title, body, icon = "🌿") => {
   }
 };
 
-const scheduleNotifications = (plants) => {
-  // Cancella notifiche precedenti
-  if ('serviceWorker' in navigator && 'PushManager' in window) {
-    // Per notifiche programmate avanzate serve un service worker
-    // Per ora usiamo un controllo giornaliero
-  }
-};
-
 // Controlla piante da innaffiare
 const checkPlantsToWater = (plants) => {
   const today = new Date().toDateString();
   const lastCheck = localStorage.getItem('lastNotificationCheck');
   
-  // Controlla solo una volta al giorno
   if (lastCheck === today) return;
   
   const plantsToWater = plants.filter(p => {
@@ -76,9 +67,7 @@ const checkPlantsToWater = (plants) => {
   localStorage.setItem('lastNotificationCheck', today);
 };
 
-// ... (resto delle funzioni esistenti: plantDB, getDaysUntilWatering, getLightIcon, getWaterIcon, handleImageUpload, ecc.)
-
-// 🌿 DATABASE COMPLETO - PARTE 1
+// 🌿 DATABASE PIANTE
 const plantDB = [
   { nome: "Monstera", nomeScientfico: "Monstera deliciosa", giorniAcqua: 7, luce: "Media-Alta", quantitaAcqua: "Moderata", difficolta: "Facile", caratteristiche: "Pianta tropicale con foglie grandi e fenestrate", curiosita: ["Le foglie sviluppano i 'buchi' solo quando la pianta è matura", "In natura può crescere fino a 20 metri"], img: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b?w=400" },
   { nome: "Snake Plant", nomeScientfico: "Sansevieria trifasciata", giorniAcqua: 14, luce: "Bassa-Alta", quantitaAcqua: "Molto poca", difficolta: "Molto Facile", caratteristiche: "Succulenta resistentissima, tollera la siccità", curiosita: ["Produce ossigeno anche di notte", "Può sopravvivere settimane senza acqua"], img: "https://images.unsplash.com/photo-1593691509543-c55fb32d8de5?w=400" },
@@ -155,33 +144,6 @@ const getWaterIcon = (quantita) => {
   return "💧💧💧💧";
 };
 
-// 📸 GESTIONE FOTO
-const handleImageUpload = (myId, file) => {
-  if (file && file.type.startsWith('image/')) {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setMiePiante(miePiante.map(p => {
-        if (p.myId === myId) {
-          return { ...p, customImg: reader.result };
-        }
-        return p;
-      }));
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-const removeCustomImage = (myId) => {
-  setMiePiante(miePiante.map(p => {
-    if (p.myId === myId) {
-      const { customImg, ...rest } = p;
-      return rest;
-    }
-    return p;
-  }));
-};
-
-// Funzione per ottenere l'immagine corretta (custom o default)
 const getPlantImage = (plant) => {
   return plant.customImg || plant.img;
 };
@@ -193,8 +155,34 @@ export default function App() {
   const [selectedPlant, setSelectedPlant] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showImageOptions, setShowImageOptions] = useState(false);
-const [notificationsEnabled, setNotificationsEnabled] = useState(false); 
-  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false); 
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+
+  // 📸 GESTIONE FOTO (dentro il componente)
+  const handleImageUpload = (myId, file) => {
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setMiePiante(miePiante.map(p => {
+          if (p.myId === myId) {
+            return { ...p, customImg: reader.result };
+          }
+          return p;
+        }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const removeCustomImage = (myId) => {
+    setMiePiante(miePiante.map(p => {
+      if (p.myId === myId) {
+        const { customImg, ...rest } = p;
+        return rest;
+      }
+      return p;
+    }));
+  };
 
   // Carica dati da localStorage
   useEffect(() => {
@@ -202,26 +190,21 @@ const [notificationsEnabled, setNotificationsEnabled] = useState(false);
     if (saved) {
       setMiePiante(JSON.parse(saved));
     }
-  }, []);
 
-// Controlla stato notifiche
+    // Controlla stato notifiche
     if ("Notification" in window) {
       setNotificationsEnabled(Notification.permission === "granted");
       
-      // Mostra prompt se non ha mai risposto
       if (Notification.permission === "default") {
         setTimeout(() => setShowNotificationPrompt(true), 3000);
       }
     }
   }, []);
 
-  // Salva dati in localStorage
+  // Salva dati e controlla notifiche
   useEffect(() => {
     localStorage.setItem("miePiante", JSON.stringify(miePiante));
-  }, [miePiante]);
-
-
-// Controlla piante da innaffiare quando cambiano
+    
     if (miePiante.length > 0 && notificationsEnabled) {
       checkPlantsToWater(miePiante);
     }
@@ -231,12 +214,10 @@ const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   useEffect(() => {
     if (!notificationsEnabled || miePiante.length === 0) return;
 
-    // Controlla ogni ora se ci sono piante da innaffiare
     const interval = setInterval(() => {
       checkPlantsToWater(miePiante);
-    }, 60 * 60 * 1000); // ogni ora
+    }, 60 * 60 * 1000);
 
-    // Controlla subito all'avvio
     checkPlantsToWater(miePiante);
 
     return () => clearInterval(interval);
@@ -256,7 +237,6 @@ const [notificationsEnabled, setNotificationsEnabled] = useState(false);
       );
     }
   };
-
 
   // Aggiungi pianta
   const addPlant = (plant) => {
@@ -288,33 +268,31 @@ const [notificationsEnabled, setNotificationsEnabled] = useState(false);
       return p;
     }));
   };
-  // ... continua da PARTE 2
-  
-  // Filtra piante per ricerca
+
+  // Filtra piante
   const filteredPlants = plantDB.filter(p => 
     p.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.nomeScientfico.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Piante che necessitano acqua
   const plantsNeedWater = miePiante.filter(p => getDaysUntilWatering(p.nextWatering) <= 0);
-
-const plantsComingSoon = miePiante.filter(p => {
+  
+  const plantsComingSoon = miePiante.filter(p => {
     const days = getDaysUntilWatering(p.nextWatering);
     return days > 0 && days <= 3;
-  }).sort((a, b) => 
-    new Date(a.nextWatering) - new Date(b.nextWatering)
-  );
-
+  }).sort((a, b) => new Date(a.nextWatering) - new Date(b.nextWatering));
 
   return (
     <div style={{ 
       minHeight: '100vh', 
       backgroundColor: COLORS.creamWhite,
+
+javascript
+
       fontFamily: 'system-ui, -apple-system, sans-serif'
     }}>
       
-  {/* 🔔 PROMPT NOTIFICHE */}
+      {/* 🔔 PROMPT NOTIFICHE */}
       {showNotificationPrompt && (
         <div style={{
           position: 'fixed',
@@ -385,7 +363,6 @@ const plantsComingSoon = miePiante.filter(p => {
         </div>
       )}
 
-
       {/* 🎯 HEADER */}
       <div style={{
         background: `linear-gradient(135deg, ${COLORS.militaryGreen} 0%, ${COLORS.darkGreen} 100%)`,
@@ -393,17 +370,23 @@ const plantsComingSoon = miePiante.filter(p => {
         boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
       }}>
         <div style={{ maxWidth: 420, margin: '0 auto' }}>
-          <h1 style={{ 
-            color: COLORS.creamWhite, 
-            margin: 0,
-            fontSize: '28px',
-            display: 'flex',
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
             alignItems: 'center',
-            gap: '10px'
+            marginBottom: plantsNeedWater.length > 0 ? '10px' : 0
           }}>
-            🌿 Casa Verde
-          </h1>
- 
+            <h1 style={{ 
+              color: COLORS.creamWhite, 
+              margin: 0,
+              fontSize: '28px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              🌿 Casa Verde
+            </h1>
+            
             {/* Pulsante Notifiche */}
             <button
               onClick={async () => {
@@ -432,6 +415,7 @@ const plantsComingSoon = miePiante.filter(p => {
               {notificationsEnabled ? '🔔' : '🔕'}
             </button>
           </div>
+
           {plantsNeedWater.length > 0 && (
             <div style={{
               marginTop: '10px',
@@ -507,7 +491,7 @@ const plantsComingSoon = miePiante.filter(p => {
         padding: '0 20px 20px'
       }}>
 
-                {/* 🏠 LE MIE PIANTE */}
+        {/* 🏠 LE MIE PIANTE */}
         {tab === 'mie' && (
           <>
             {miePiante.length === 0 ? (
@@ -541,7 +525,6 @@ const plantsComingSoon = miePiante.filter(p => {
                       position: 'relative'
                     }}
                   >
-                    {/* Contenitore Immagine con Badge Foto Personalizzata */}
                     <div style={{ position: 'relative' }}>
                       <img
                         src={getPlantImage(p)}
@@ -706,93 +689,303 @@ const plantsComingSoon = miePiante.filter(p => {
           </>
         )}
 
-        {/* ✅ TO-DO */}
+        {/* ✅ TO-DO MIGLIORATO */}
         {tab === 'todo' && (
           <>
-            {plantsNeedWater.length === 0 ? (
+            {miePiante.length === 0 ? (
               <div style={{
                 textAlign: 'center',
                 padding: '60px 20px',
                 color: COLORS.lightGreen
               }}>
-                <div style={{ fontSize: '80px', marginBottom: '20px' }}>✅</div>
-                <h2 style={{ color: COLORS.textDark, marginBottom: '10px' }}>Tutto fatto!</h2>
-                <p>Nessuna pianta ha bisogno di acqua oggi</p>
+                <div style={{ fontSize: '80px', marginBottom: '20px' }}>🌱</div>
+                <h2 style={{ color: COLORS.textDark, marginBottom: '10px' }}>Nessuna pianta ancora</h2>
+                <p>Aggiungi piante per vedere il calendario di innaffiatura</p>
               </div>
             ) : (
               <>
-                <h2 style={{ 
-                  color: COLORS.textDark,
-                  marginBottom: 20,
-                  fontSize: '20px'
-                }}>
-                  Piante da innaffiare oggi
-                </h2>
-                {plantsNeedWater.map(p => (
-                  <div
-                    key={p.myId}
-                    style={{
+                {/* Da innaffiare ORA */}
+                          {plantsNeedWater.length > 0 && (
+                  <div style={{ marginBottom: 30 }}>
+                    <div style={{
                       display: 'flex',
-                      gap: 15,
-                      padding: 15,
-                      marginBottom: 15,
-                      borderRadius: 16,
-                      backgroundColor: COLORS.creamWhite,
-                      border: `2px solid ${COLORS.alertRed}`,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
-                    }}
-                  >
-                    <img
-                      src={p.img}
-                      alt={p.nome}
-                      style={{
-                        width: 70,
-                        height: 70,
-                        borderRadius: 12,
-                        objectFit: 'cover'
-                      }}
-                    />
-                    <div style={{ flex: 1 }}>
-                      <h3 style={{ 
-                        margin: '0 0 8px 0',
-                        color: COLORS.textDark,
-                        fontSize: '16px'
-                      }}>
-                        {p.nome}
-                      </h3>
-                      <div style={{
-                        fontSize: '13px',
+                      alignItems: 'center',
+                      gap: 10,
+                      marginBottom: 15
+                    }}>
+                      <h2 style={{ 
                         color: COLORS.alertRed,
-                        marginBottom: 10,
+                        margin: 0,
+                        fontSize: '20px',
                         fontWeight: 'bold'
                       }}>
-                        💧 Necessita acqua ora!
+                        💧 Da innaffiare ora
+                      </h2>
+                      <div style={{
+                        backgroundColor: COLORS.alertRed,
+                        color: COLORS.creamWhite,
+                        padding: '4px 10px',
+                        borderRadius: 12,
+                        fontSize: '14px',
+                        fontWeight: 'bold'
+                      }}>
+                        {plantsNeedWater.length}
                       </div>
-                      <button
-                        onClick={() => waterPlant(p.myId)}
-                        style={{
-                          padding: '8px 16px',
-                          backgroundColor: COLORS.militaryGreen,
-                          color: COLORS.creamWhite,
-                          border: 'none',
-                          borderRadius: 8,
-                          fontSize: '13px',
-                          fontWeight: 'bold',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        ✓ Ho innaffiato
-                      </button>
                     </div>
+
+                    {plantsNeedWater.map(p => {
+                      const daysOverdue = Math.abs(getDaysUntilWatering(p.nextWatering));
+                      return (
+                        <div
+                          key={p.myId}
+                          style={{
+                            display: 'flex',
+                            gap: 15,
+                            padding: 15,
+                            marginBottom: 12,
+                            borderRadius: 16,
+                            backgroundColor: COLORS.creamWhite,
+                            border: `3px solid ${COLORS.alertRed}`,
+                            boxShadow: '0 4px 12px rgba(193,102,107,0.2)'
+                          }}
+                        >
+                          <img
+                            src={getPlantImage(p)}
+                            alt={p.nome}
+                            onClick={() => setSelectedPlant(p)}
+                            style={{
+                              width: 70,
+                              height: 70,
+                              borderRadius: 12,
+                              objectFit: 'cover',
+                              cursor: 'pointer',
+                              border: `3px solid ${COLORS.alertRed}`
+                            }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{ 
+                              margin: '0 0 6px 0',
+                              color: COLORS.textDark,
+                              fontSize: '17px'
+                            }}>
+                              {p.nome}
+                            </h3>
+                            <div style={{
+                              fontSize: '13px',
+                              color: COLORS.alertRed,
+                              marginBottom: 10,
+                              fontWeight: 'bold'
+                            }}>
+                              {daysOverdue === 0 
+                                ? '⚠️ Da innaffiare oggi!' 
+                                : `⚠️ In ritardo di ${daysOverdue} ${daysOverdue === 1 ? 'giorno' : 'giorni'}!`
+                              }
+                            </div>
+                            <button
+                              onClick={() => {
+                                waterPlant(p.myId);
+                                sendNotification(
+                                  '✅ Pianta innaffiata!',
+                                  `${p.nome} è stata innaffiata. Prossima volta tra ${p.giorniAcqua} giorni.`,
+                                  '💧'
+                                );
+                              }}
+                              style={{
+                                padding: '8px 16px',
+                                backgroundColor: COLORS.militaryGreen,
+                                color: COLORS.creamWhite,
+                                border: 'none',
+                                borderRadius: 8,
+                                fontSize: '13px',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 6
+                              }}
+                            >
+                              ✓ Ho innaffiato
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
+
+                {/* Prossimi 3 giorni */}
+                {plantsComingSoon.length > 0 && (
+                  <div style={{ marginBottom: 30 }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      marginBottom: 15
+                    }}>
+                      <h2 style={{ 
+                        color: COLORS.textDark,
+                        margin: 0,
+                        fontSize: '18px',
+                        fontWeight: 'bold'
+                      }}>
+                        📅 Prossimi 3 giorni
+                      </h2>
+                      <div style={{
+                        backgroundColor: COLORS.accentGreen,
+                        color: COLORS.creamWhite,
+                        padding: '4px 10px',
+                        borderRadius: 12,
+                        fontSize: '13px',
+                        fontWeight: 'bold'
+                      }}>
+                        {plantsComingSoon.length}
+                      </div>
+                    </div>
+
+                    {plantsComingSoon.map(p => {
+                      const daysLeft = getDaysUntilWatering(p.nextWatering);
+                      const nextDate = new Date(p.nextWatering);
+                      const dateStr = nextDate.toLocaleDateString('it-IT', { 
+                        weekday: 'short', 
+                        day: 'numeric', 
+                        month: 'short' 
+                      });
+
+                      return (
+                        <div
+                          key={p.myId}
+                          onClick={() => setSelectedPlant(p)}
+                          style={{
+                            display: 'flex',
+                            gap: 15,
+                            padding: 15,
+                            marginBottom: 12,
+                            borderRadius: 16,
+                            backgroundColor: COLORS.creamWhite,
+                            border: `2px solid ${COLORS.lightGreen}`,
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s'
+                          }}
+                          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                          <img
+                            src={getPlantImage(p)}
+                            alt={p.nome}
+                            style={{
+                              width: 60,
+                              height: 60,
+                              borderRadius: 12,
+                              objectFit: 'cover',
+                              border: `2px solid ${COLORS.accentGreen}`
+                            }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <h3 style={{ 
+                              margin: '0 0 6px 0',
+                              color: COLORS.textDark,
+                              fontSize: '16px'
+                            }}>
+                              {p.nome}
+                            </h3>
+                            <div style={{
+                              fontSize: '13px',
+                              color: COLORS.lightGreen,
+                              marginBottom: 4
+                            }}>
+                              📅 {dateStr}
+                            </div>
+                            <div style={{
+                              display: 'inline-block',
+                              padding: '4px 10px',
+                              backgroundColor: COLORS.accentGreen + '30',
+                              color: COLORS.textDark,
+                              borderRadius: 6,
+                              fontSize: '12px',
+                              fontWeight: 'bold'
+                            }}>
+                              Tra {daysLeft} {daysLeft === 1 ? 'giorno' : 'giorni'}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Tutte le altre piante */}
+                {miePiante.filter(p => getDaysUntilWatering(p.nextWatering) > 3).length > 0 && (
+                  <div>
+                    <h2 style={{ 
+                      color: COLORS.textDark,
+                      margin: '0 0 15px 0',
+                      fontSize: '18px',
+                      fontWeight: 'bold'
+                    }}>
+                      🌿 Altre piante
+                    </h2>
+                    {miePiante
+                      .filter(p => getDaysUntilWatering(p.nextWatering) > 3)
+                      .sort((a, b) => new Date(a.nextWatering) - new Date(b.nextWatering))
+                      .map(p => {
+                        const daysLeft = getDaysUntilWatering(p.nextWatering);
+                        return (
+                          <div
+                            key={p.myId}
+                            onClick={() => setSelectedPlant(p)}
+                            style={{
+                              display: 'flex',
+                              gap: 12,
+                              padding: 12,
+                              marginBottom: 10,
+                              borderRadius: 12,
+                              backgroundColor: COLORS.creamWhite,
+                              border: `1px solid ${COLORS.lightGreen}40`,
+                              cursor: 'pointer',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGreen + '10'}
+                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.creamWhite}
+                          >
+                            <img
+                              src={getPlantImage(p)}
+                              alt={p.nome}
+                              style={{
+                                width: 50,
+                                height: 50,
+                                borderRadius: 10,
+                                objectFit: 'cover'
+                              }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ 
+                                fontWeight: '600',
+                                color: COLORS.textDark,
+                                marginBottom: 4,
+                                fontSize: '15px'
+                              }}>
+                                {p.nome}
+                              </div>
+                              <div style={{
+                                fontSize: '12px',
+                                color: COLORS.lightGreen
+                              }}>
+                                Tra {daysLeft} giorni
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
               </>
             )}
           </>
         )}
       </div>
 
-          {/* 🔍 MODAL DETTAGLIO PIANTA */}
+      {/* 🔍 MODAL DETTAGLIO PIANTA */}
       {selectedPlant && (
         <div
           onClick={() => {
@@ -865,7 +1058,7 @@ const plantsComingSoon = miePiante.filter(p => {
               </button>
             </div>
 
-            {/* Immagine con pulsante cambio foto (solo per piante già aggiunte) */}
+            {/* Immagine con pulsante cambio foto */}
             <div style={{ position: 'relative' }}>
               <img
                 src={getPlantImage(selectedPlant)}
@@ -877,7 +1070,6 @@ const plantsComingSoon = miePiante.filter(p => {
                 }}
               />
               
-              {/* Pulsante Cambio Foto - Solo per piante già aggiunte */}
               {selectedPlant.myId && (
                 <div style={{
                   position: 'absolute',
@@ -947,14 +1139,13 @@ const plantsComingSoon = miePiante.filter(p => {
                     animation: 'slideUp 0.2s'
                   }}
                 >
-                  {/* Scatta Foto */}
                   <label style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
                     padding: '14px 16px',
                     cursor: 'pointer',
-                    borderBottom: `1px solid ${COLORS.lightGreen}30`,
+                                    borderBottom: `1px solid ${COLORS.lightGreen}30`,
                     transition: 'background 0.2s'
                   }}
                   onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGreen + '20'}
@@ -976,7 +1167,6 @@ const plantsComingSoon = miePiante.filter(p => {
                         if (e.target.files[0]) {
                           handleImageUpload(selectedPlant.myId, e.target.files[0]);
                           setShowImageOptions(false);
-                          // Aggiorna l'immagine nel modal
                           const reader = new FileReader();
                           reader.onloadend = () => {
                             setSelectedPlant({...selectedPlant, customImg: reader.result});
@@ -988,7 +1178,6 @@ const plantsComingSoon = miePiante.filter(p => {
                     />
                   </label>
 
-                  {/* Carica dalla Galleria */}
                   <label style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -1015,7 +1204,6 @@ const plantsComingSoon = miePiante.filter(p => {
                         if (e.target.files[0]) {
                           handleImageUpload(selectedPlant.myId, e.target.files[0]);
                           setShowImageOptions(false);
-                          // Aggiorna l'immagine nel modal
                           const reader = new FileReader();
                           reader.onloadend = () => {
                             setSelectedPlant({...selectedPlant, customImg: reader.result});
@@ -1030,10 +1218,9 @@ const plantsComingSoon = miePiante.filter(p => {
               )}
             </div>
 
-            {/* Resto del contenuto del modal (rimane uguale) */}
+            {/* Contenuto Modal */}
             <div style={{ padding: 20 }}>
               
-              {/* Badge Foto Personalizzata */}
               {selectedPlant.customImg && (
                 <div style={{
                   display: 'inline-block',
@@ -1049,7 +1236,6 @@ const plantsComingSoon = miePiante.filter(p => {
                 </div>
               )}
 
-              {/* Nome Scientifico */}
               <div style={{
                 fontSize: '14px',
                 color: COLORS.lightGreen,
@@ -1059,7 +1245,6 @@ const plantsComingSoon = miePiante.filter(p => {
                 {selectedPlant.nomeScientfico}
               </div>
 
-              {/* Badge Difficoltà */}
               <div style={{
                 display: 'inline-block',
                 padding: '6px 12px',
@@ -1286,6 +1471,16 @@ const plantsComingSoon = miePiante.filter(p => {
         @keyframes slideUp {
           from { transform: translateY(100%); }
           to { transform: translateY(0); }
+        }
+        @keyframes slideDown {
+          from { 
+            opacity: 0;
+            transform: translateX(-50%) translateY(-20px);
+          }
+          to { 
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
         }
         * {
           box-sizing: border-box;
