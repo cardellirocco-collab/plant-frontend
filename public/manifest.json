@@ -1,7 +1,7 @@
 
 {
-  "name": "Casa Verde - Gestione Piante",
-  "short_name": "Casa Verde",
+  "name": "Green House - Gestione Piante",
+  "short_name": "Green House",
   "description": "App per gestire e monitorare le tue piante da appartamento",
   "start_url": "/",
   "display": "standalone",
