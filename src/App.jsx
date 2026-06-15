@@ -142,7 +142,15 @@ const [miePiante, setMiePiante] = useState([]);
         </h1>
 
         {/* MENU */}
-        <div style={{ display: "flex", gap: 15, marginBottom: 20 }}>
+       
+<div
+  style={{
+    display: "flex",
+    justifyContent: "space-between",
+    marginBottom: 20,
+  }}
+>
+
           <button onClick={() => setTab("mie")}>Le tue piante</button>
           <button onClick={() => setTab("plantario")}>Plantario</button>
           <button onClick={() => setTab("todo")}>To‑Do</button>
@@ -184,17 +192,44 @@ const [miePiante, setMiePiante] = useState([]);
           <>
             <h2>Le tue piante</h2>
 
-            {miePiante.map((p, i) => (
-              <div
-                key={i}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: 15,
-                  padding: 12,
-                  marginTop: 10,
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
+           {miePiante.map((p, i) => (
+  <div
+    key={i}
+    style={{
+      border: "1px solid #ddd",
+      borderRadius: 15,
+      padding: 12,
+      marginTop: 10,
+      display: "flex",
+      gap: 10,
+      alignItems: "center",
+    }}
+  >
+    {p.img && (
+      <img
+        src={p.img}
+        style={{ width: 60, height: 60, borderRadius: 10 }}
+      />
+    )}
+
+    <div style={{ flex: 1 }}>
+      <b>{p.nome}</b>
+      <p style={{ fontSize: 12 }}>
+        💧 ogni {p.giorniAcqua || "?"} giorni
+      </p>
+    </div>
+
+    <div
+      style={{
+        background: "#E8E6D9",
+        padding: "5px 10px",
+        borderRadius: 10,
+      }}
+    >
+      tra {p.giorniAcqua} giorni
+    </div>
+  </div>
+))}
               >
                 <div>
                   <b>{p.nome}</b>
