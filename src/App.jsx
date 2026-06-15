@@ -67,6 +67,21 @@ const matchPianta = (nomeAI) =>
     nomeAI?.toLowerCase().includes(p.nome.toLowerCase())
   );
 
+const getPlantImage = (nome) => {
+  const images = {
+    Monstera: "https://images.unsplash.com/photo-1501004318641-b39e6451bec6",
+    "Snake Plant": "https://images.unsplash.com/photo-1593691509543-c55fb32d8de5",
+    "Parlor Palm": "https://images.unsplash.com/photo-1615874959474-d609969a20ed",
+    Pothos: "https://images.unsplash.com/photo-1614594975525-e45190c55d0b",
+    "Aloe Vera": "https://images.unsplash.com/photo-1587049352846-4a222e784d38",
+  };
+
+  return (
+    images[nome] ||
+    `https://source.unsplash.com/400x400/?${nome},plant`
+  );
+};
+
 export default function App() {
   const [miePiante, setMiePiante] = useState([
     { nome: "Monstera", giorniAcqua: 7 },
@@ -206,30 +221,48 @@ export default function App() {
           </>
         )}
 
-        {/* SEZIONE PLANTARIO */}
-        {tab === "plantario" && (
-          <>
-            <h2>Plantario</h2>
-            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-              {plantDB.map((p, i) => (
-                <div
-                  key={i}
-                  style={{
-                    border: "1px solid #ddd",
-                    borderRadius: 12,
-                    padding: 10,
-                    width: "45%",
-                    textAlign: "center",
-                  }}
-                >
-                  🌿 {p.nome}
-                  <br />
-                  <button style={{ marginTop: 5 }}>Info</button>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
+       {/* SEZIONE PLANTARIO */}
+{tab === "plantario" && (
+  <>
+    <h2>Plantario</h2>
+
+    <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+      {plantDB.map((p, i) => (
+        <div
+          key={i}
+          style={{
+            border: "1px solid #ddd",
+            borderRadius: 12,
+            padding: 10,
+            width: "45%",
+            textAlign: "center",
+          }}
+        >
+          <img
+            src={getPlantImage(p.nome)}
+            style={{ width: "100%", borderRadius: 10 }}
+            alt={p.nome}
+          />
+
+          <div>{p.nome}</div>
+
+          <button
+            style={{ marginTop: 5 }}
+            onClick={() => {
+              setMiePiante((prev) => {
+                if (prev.some((x) => x.nome === p.nome)) return prev;
+                return [...prev, p];
+              });
+            }}
+          >
+            ➕ Aggiungi
+          </button>
+        </div>
+      ))}
+    </div>
+  </>
+)}
+
 
         {/* SEZIONE TODO */}
         {tab === "todo" && (
