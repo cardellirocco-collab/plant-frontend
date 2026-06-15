@@ -247,7 +247,7 @@ const [miePiante, setMiePiante] = useState([]);
             onClick={() => {
               setMiePiante((prev) => {
                 if (prev.some((x) => x.nome === p.nome)) return prev;
-                return [...prev, p];
+                return [...prev, { ...p, img: getPlantImage(p.nome) }];
               });
             }}
           >
@@ -265,22 +265,45 @@ const [miePiante, setMiePiante] = useState([]);
           <>
             <h2>To‑Do</h2>
 
-            {miePiante.map((p, i) => (
-              <div
-                key={i}
-                style={{
-                  border: "1px solid #ddd",
-                  borderRadius: 15,
-                  padding: 10,
-                  marginTop: 10,
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                {p.nome}
-                <span>tra {p.giorniAcqua} giorni</span>
-              </div>
-            ))}
+           {miePiante.map((p, i) => (
+  <div
+    key={i}
+    style={{
+      border: "1px solid #ddd",
+      borderRadius: 15,
+      padding: 12,
+      marginTop: 10,
+      display: "flex",
+      gap: 10,
+      alignItems: "center",
+    }}
+  >
+    {p.img && (
+      <img
+        src={p.img}
+        style={{ width: 60, height: 60, objectFit: "cover", borderRadius: 10 }}
+        alt={p.nome}
+      />
+    )}
+
+    <div style={{ flex: 1 }}>
+      <b>{p.nome}</b>
+      <p style={{ fontSize: 12 }}>
+        💧 ogni {p.giorniAcqua || "?"} giorni
+      </p>
+    </div>
+
+    <div
+      style={{
+        background: "#E8E6D9",
+        padding: "5px 10px",
+        borderRadius: 10,
+      }}
+    >
+      tra {p.giorniAcqua} giorni
+    </div>
+  </div>
+))}
           </>
         )}
       </div>
