@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-
+// update
 // 🌿 DATABASE PIANTE
 const plantDB = [
 { nome:"Monstera",giorniAcqua:8,luce:"indiretta"},
