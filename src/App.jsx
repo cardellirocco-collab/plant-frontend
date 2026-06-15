@@ -126,36 +126,35 @@ const [miePiante, setMiePiante] = useState([]);
   };
 
   return (
-    <div style={{ background: "#F4EFE6", minHeight: "100vh", padding: 20 }}>
-      <div
-        style={{
-          maxWidth: 420,
-          margin: "auto",
-          background: "#fff",
-          borderRadius: 25,
-          padding: 20,
-        }}
-      >
-        {/* HEADER */}
-        <h1 style={{ textAlign: "center", marginBottom: 20 }}>
-          Casa Verde 🌿
-        </h1>
-
-        {/* MENU */}
-       
-<div
+ <div
   style={{
     display: "flex",
     justifyContent: "space-between",
     marginBottom: 20,
   }}
 >
-
-          <button onClick={() => setTab("mie")}>Le tue piante</button>
-          <button onClick={() => setTab("plantario")}>Plantario</button>
-          <button onClick={() => setTab("todo")}>To‑Do</button>
-        </div>
-
+  {["mie", "plantario", "todo"].map((t) => (
+    <button
+      key={t}
+      onClick={() => setTab(t)}
+      style={{
+        flex: 1,
+        margin: "0 5px",
+        padding: 10,
+        borderRadius: 10,
+        background: tab === t ? "#2D6A4F" : "#eee",
+        color: tab === t ? "white" : "black",
+        border: "none",
+      }}
+    >
+      {t === "mie"
+        ? "Le tue piante"
+        : t === "plantario"
+        ? "Plantario"
+        : "To‑Do"}
+    </button>
+  ))}
+</div>
         {/* BOTTONE FOTO */}
         <label
           style={{
