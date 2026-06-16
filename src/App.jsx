@@ -2139,7 +2139,59 @@ useEffect(() => {
         <button
           onClick={() => {
             if (!customPlant.nome.trim()) {
-              alert('❌
+              alert('❌ Inserisci almeno il nome della pianta!');
+              return;
+            }
+
+            // Crea pianta custom
+            const newCustomPlant = {
+              ...customPlant,
+              nomeScientfico: customPlant.nomeScientfico || customPlant.nome,
+              caratteristiche: "Pianta personalizzata",
+              curiosita: ["Pianta aggiunta manualmente dall'utente"],
+              img: "https://images.unsplash.com/photo-1463320726281-696a485928c7?w=400"
+            };
+
+            // Aggiungi alle mie piante
+            addPlant(newCustomPlant);
+
+            // Reset e chiudi
+            setShowCustomPlantForm(false);
+            setCustomPlant({
+              nome: "",
+              nomeScientfico: "",
+              giorniAcqua: 7,
+              luce: "Media",
+              quantitaAcqua: "Moderata",
+              difficolta: "Facile"
+            });
+
+            // Conferma e vai al tab
+            alert(`✅ ${newCustomPlant.nome} aggiunta con successo!`);
+            setTab('mie');
+          }}
+          style={{
+            width: '100%',
+            padding: '14px',
+            backgroundColor: COLORS.militaryGreen,
+            color: COLORS.creamWhite,
+            border: 'none',
+            borderRadius: 12,
+            fontSize: '15px',
+            fontWeight: 'bold',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8
+          }}
+        >
+          ✅ Salva Pianta
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     
     
       {/* 🔍 MODAL DETTAGLIO PIANTA */}
