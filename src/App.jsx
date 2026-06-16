@@ -127,8 +127,20 @@ const plantDB = [
 
 // 🧮 FUNZIONI UTILITÀ
 const getDaysUntilWatering = (nextWatering) => {
-  const days = Math.ceil((new Date(nextWatering) - new Date()) / (1000 * 60 * 60 * 24));
-  return days;
+  if (!nextWatering) return 0;
+  
+  // Crea date senza ore per confronto preciso
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  const nextDate = new Date(nextWatering);
+  nextDate.setHours(0, 0, 0, 0);
+  
+  // Calcola differenza in millisecondi e converti in giorni
+  const diffTime = nextDate - today;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  return diffDays;
 };
 
 const getLightIcon = (luce) => {
@@ -148,6 +160,54 @@ const getPlantImage = (plant) => {
   return plant.customImg || plant.img;
 };
 
+// 📸 COMPRESSIONE IMMAGINI
+const compressImage = (file, maxWidth = 800, quality = 0.7) => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      const img = new Image();
+      
+      img.onload = () => {
+        // Crea canvas per ridimensionare
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Ridimensiona se troppo grande
+        if (width > maxWidth) {
+          height = (height * maxWidth) / width;
+          width = maxWidth;
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Converti in base64 compresso
+        const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+        
+        console.log('📸 Immagine compressa:', {
+          originale: (file.size / 1024).toFixed(2) + ' KB',
+          compressa: (compressedBase64.length / 1024).toFixed(2) + ' KB',
+          riduzione: ((1 - compressedBase64.length / (file.size * 1.37)) * 100).toFixed(1) + '%'
+        });
+        
+        resolve(compressedBase64);
+      };
+      
+      img.onerror = reject;
+      img.src = e.target.result;
+    };
+    
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
+
 // 📱 COMPONENTE PRINCIPALE
 export default function App() {
   const [miePiante, setMiePiante] = useState([]);
@@ -157,22 +217,79 @@ export default function App() {
   const [showImageOptions, setShowImageOptions] = useState(false);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   // 📸 GESTIONE FOTO (dentro il componente)
-  const handleImageUpload = (myId, file) => {
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setMiePiante(miePiante.map(p => {
-          if (p.myId === myId) {
-            return { ...p, customImg: reader.result };
-          }
-          return p;
-        }));
-      };
-      reader.readAsDataURL(file);
+const handleImageUpload = async (myId, file) => {
+  if (!file || !file.type.startsWith('image/')) {
+    alert('❌ Seleziona un file immagine valido');
+    return;
+  }
+  
+  if (file.size > 5 * 1024 * 1024) {
+    alert('❌ Immagine troppo grande! Max 5MB');
+    return;
+  }
+  
+  try {
+    setUploadingImage(true); // ✅ Mostra loading
+    console.log('📸 Caricamento immagine...');
+    
+    const compressedImage = await compressImage(file, 800, 0.7);
+    
+    setMiePiante(prevPiante => prevPiante.map(p => {
+      if (p.myId === myId) {
+        return { ...p, customImg: compressedImage };
+      }
+      return p;
+    }));
+    
+    console.log('✅ Immagine caricata con successo');
+    
+  } catch (error) {
+    console.error('❌ Errore caricamento immagine:', error);
+    alert('❌ Errore nel caricamento dell\'immagine. Riprova con un\'immagine più piccola.');
+  } finally {
+    setUploadingImage(false); // ✅ Nascondi loading
+  }
+};
+
+// 📊 CONTROLLA SPAZIO LOCALSTORAGE
+const checkLocalStorageSize = () => {
+  let total = 0;
+  for (let key in localStorage) {
+    if (localStorage.hasOwnProperty(key)) {
+      total += localStorage[key].length + key.length;
     }
-  };
+  }
+  const totalKB = (total / 1024).toFixed(2);
+  const limitKB = 5120; // 5MB limite tipico
+  const percentUsed = ((total / (limitKB * 1024)) * 100).toFixed(1);
+  
+  console.log(`📊 localStorage: ${totalKB} KB / ${limitKB} KB (${percentUsed}%)`);
+  
+  if (percentUsed > 80) {
+    console.warn('⚠️ localStorage quasi pieno!');
+  }
+  
+  return { totalKB, percentUsed };
+};
+    
+    // Aggiorna stato
+    setMiePiante(prevPiante => prevPiante.map(p => {
+      if (p.myId === myId) {
+        return { ...p, customImg: compressedImage };
+      }
+      return p;
+    }));
+    
+    console.log('✅ Immagine caricata con successo');
+    
+  } catch (error) {
+    console.error('❌ Errore caricamento immagine:', error);
+    alert('❌ Errore nel caricamento dell\'immagine. Riprova con un\'immagine più piccola.');
+  }
+};
 
   const removeCustomImage = (myId) => {
     setMiePiante(miePiante.map(p => {
@@ -201,14 +318,34 @@ export default function App() {
     }
   }, []);
 
-  // Salva dati e controlla notifiche
-  useEffect(() => {
-    localStorage.setItem("miePiante", JSON.stringify(miePiante));
+ // Salva dati e controlla notifiche
+useEffect(() => {
+  try {
+    const dataToSave = JSON.stringify(miePiante);
+    localStorage.setItem("miePiante", dataToSave);
+    
+    // Controlla spazio
+    checkLocalStorageSize();
     
     if (miePiante.length > 0 && notificationsEnabled) {
       checkPlantsToWater(miePiante);
     }
-  }, [miePiante, notificationsEnabled]);
+  } catch (error) {
+    console.error('❌ Errore salvataggio localStorage:', error);
+    
+    if (error.name === 'QuotaExceededError') {
+      alert('⚠️ Spazio esaurito! Rimuovi alcune foto personalizzate.');
+      
+      // Rimuovi tutte le foto custom per liberare spazio
+      if (confirm('Vuoi rimuovere tutte le foto personalizzate per liberare spazio?')) {
+        setMiePiante(prevPiante => prevPiante.map(p => {
+          const { customImg, ...rest } = p;
+          return rest;
+        }));
+      }
+    }
+  }
+}, [miePiante, notificationsEnabled]);
 
   // Controllo giornaliero notifiche
   useEffect(() => {
@@ -240,14 +377,22 @@ export default function App() {
 
   // Aggiungi pianta
   const addPlant = (plant) => {
-    const newPlant = {
-      ...plant,
-      myId: Date.now(),
-      lastWatered: new Date().toISOString(),
-      nextWatering: new Date(Date.now() + plant.giorniAcqua * 24 * 60 * 60 * 1000).toISOString()
-    };
-    setMiePiante([...miePiante, newPlant]);
+  const now = new Date();
+  
+  // Calcola la prossima data di innaffiatura
+  const nextWateringDate = new Date(now);
+  nextWateringDate.setDate(now.getDate() + plant.giorniAcqua);
+  nextWateringDate.setHours(0, 0, 0, 0); // Resetta ore
+  
+  const newPlant = {
+    ...plant,
+    myId: Date.now(),
+    lastWatered: now.toISOString(),
+    nextWatering: nextWateringDate.toISOString()
   };
+  
+  setMiePiante([...miePiante, newPlant]);
+};
 
   // Rimuovi pianta
   const removePlant = (myId) => {
@@ -257,17 +402,24 @@ export default function App() {
 
   // Innaffia pianta
   const waterPlant = (myId) => {
-    setMiePiante(miePiante.map(p => {
-      if (p.myId === myId) {
-        return {
-          ...p,
-          lastWatered: new Date().toISOString(),
-          nextWatering: new Date(Date.now() + p.giorniAcqua * 24 * 60 * 60 * 1000).toISOString()
-        };
-      }
-      return p;
-    }));
-  };
+  setMiePiante(miePiante.map(p => {
+    if (p.myId === myId) {
+      const now = new Date();
+      
+      // Calcola la prossima data di innaffiatura
+      const nextWateringDate = new Date(now);
+      nextWateringDate.setDate(now.getDate() + p.giorniAcqua);
+      nextWateringDate.setHours(0, 0, 0, 0); // Resetta ore
+      
+      return {
+        ...p,
+        lastWatered: now.toISOString(),
+        nextWatering: nextWateringDate.toISOString()
+      };
+    }
+    return p;
+  }));
+};
 
   // Filtra piante
   const filteredPlants = plantDB.filter(p => 
@@ -1082,33 +1234,35 @@ export default function App() {
                 }}
               />
               
-              {selectedPlant.myId && (
-                <div style={{
-                  position: 'absolute',
-                  bottom: 15,
-                  right: 15,
-                  display: 'flex',
-                  gap: 10
-                }}>
-                  <button
-                    onClick={() => setShowImageOptions(!showImageOptions)}
-                    style={{
-                      padding: '10px 16px',
-                      backgroundColor: COLORS.militaryGreen,
-                      color: COLORS.creamWhite,
-                      border: 'none',
-                      borderRadius: 10,
-                      fontSize: '14px',
-                      fontWeight: 'bold',
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6
-                    }}
-                  >
-                    📸 Cambia foto
-                  </button>
+            {selectedPlant.myId && (
+  <div style={{
+    position: 'absolute',
+    bottom: 15,
+    right: 15,
+    display: 'flex',
+    gap: 10
+  }}>
+    <button
+      onClick={() => setShowImageOptions(!showImageOptions)}
+      disabled={uploadingImage} // ✅ AGGIUNGI QUESTA RIGA
+      style={{
+        padding: '10px 16px',
+        backgroundColor: uploadingImage ? COLORS.lightGreen : COLORS.militaryGreen, // ✅ MODIFICA
+        color: COLORS.creamWhite,
+        border: 'none',
+        borderRadius: 10,
+        fontSize: '14px',
+        fontWeight: 'bold',
+        cursor: uploadingImage ? 'not-allowed' : 'pointer', // ✅ MODIFICA
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        display: 'flex',
+        alignItems: 'center',
+        gap: 6,
+        opacity: uploadingImage ? 0.6 : 1 // ✅ AGGIUNGI QUESTA RIGA
+      }}
+    >
+      {uploadingImage ? '⏳ Caricamento...' : '📸 Cambia foto'} {/* ✅ MODIFICA */}
+    </button>
                   
                   {selectedPlant.customImg && (
                     <button
