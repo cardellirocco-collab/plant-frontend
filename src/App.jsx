@@ -219,7 +219,7 @@ export default function App() {
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
-  // 📸 GESTIONE FOTO (dentro il componente)
+// 📸 GESTIONE FOTO (dentro il componente)
 const handleImageUpload = async (myId, file) => {
   if (!file || !file.type.startsWith('image/')) {
     alert('❌ Seleziona un file immagine valido');
@@ -232,7 +232,7 @@ const handleImageUpload = async (myId, file) => {
   }
   
   try {
-    setUploadingImage(true); // ✅ Mostra loading
+    setUploadingImage(true);
     console.log('📸 Caricamento immagine...');
     
     const compressedImage = await compressImage(file, 800, 0.7);
@@ -250,7 +250,7 @@ const handleImageUpload = async (myId, file) => {
     console.error('❌ Errore caricamento immagine:', error);
     alert('❌ Errore nel caricamento dell\'immagine. Riprova con un\'immagine più piccola.');
   } finally {
-    setUploadingImage(false); // ✅ Nascondi loading
+    setUploadingImage(false);
   }
 };
 
@@ -263,7 +263,7 @@ const checkLocalStorageSize = () => {
     }
   }
   const totalKB = (total / 1024).toFixed(2);
-  const limitKB = 5120; // 5MB limite tipico
+  const limitKB = 5120;
   const percentUsed = ((total / (limitKB * 1024)) * 100).toFixed(1);
   
   console.log(`📊 localStorage: ${totalKB} KB / ${limitKB} KB (${percentUsed}%)`);
@@ -274,32 +274,16 @@ const checkLocalStorageSize = () => {
   
   return { totalKB, percentUsed };
 };
-    
-    // Aggiorna stato
-    setMiePiante(prevPiante => prevPiante.map(p => {
-      if (p.myId === myId) {
-        return { ...p, customImg: compressedImage };
-      }
-      return p;
-    }));
-    
-    console.log('✅ Immagine caricata con successo');
-    
-  } catch (error) {
-    console.error('❌ Errore caricamento immagine:', error);
-    alert('❌ Errore nel caricamento dell\'immagine. Riprova con un\'immagine più piccola.');
-  }
-};
 
-  const removeCustomImage = (myId) => {
-    setMiePiante(miePiante.map(p => {
-      if (p.myId === myId) {
-        const { customImg, ...rest } = p;
-        return rest;
-      }
-      return p;
-    }));
-  };
+const removeCustomImage = (myId) => {
+  setMiePiante(miePiante.map(p => {
+    if (p.myId === myId) {
+      const { customImg, ...rest } = p;
+      return rest;
+    }
+    return p;
+  }));
+};
 
   // Carica dati da localStorage
   useEffect(() => {
@@ -434,15 +418,12 @@ useEffect(() => {
     return days > 0 && days <= 3;
   }).sort((a, b) => new Date(a.nextWatering) - new Date(b.nextWatering));
 
-  return (
-    <div style={{ 
-      minHeight: '100vh', 
-      backgroundColor: COLORS.creamWhite,
-
-
-
-      fontFamily: 'system-ui, -apple-system, sans-serif',
-       display: 'flex',
+ return (
+  <div style={{ 
+    minHeight: '100vh', 
+    backgroundColor: COLORS.creamWhite,
+    fontFamily: 'system-ui, -apple-system, sans-serif',
+    display: 'flex',
     flexDirection: 'column',
     alignItems: 'center'
     }}>
