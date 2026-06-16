@@ -160,6 +160,44 @@ const getPlantImage = (plant) => {
   return plant.customImg || plant.img;
 };
 
+// 📅 FUNZIONI CALENDARIO
+const getDaysInMonth = (month, year) => {
+  return new Date(year, month + 1, 0).getDate();
+};
+
+const getFirstDayOfMonth = (month, year) => {
+  return new Date(year, month, 1).getDay();
+};
+
+const getMonthName = (month) => {
+  const months = [
+    'Gennaio', 'Febbraio', 'Marzo', 'Aprile', 'Maggio', 'Giugno',
+    'Luglio', 'Agosto', 'Settembre', 'Ottobre', 'Novembre', 'Dicembre'
+  ];
+  return months[month];
+};
+
+const getPlantsForDate = (day, month, year, plants) => {
+  const dateToCheck = new Date(year, month, day);
+  dateToCheck.setHours(0, 0, 0, 0);
+  
+  return plants.filter(p => {
+    const nextWatering = new Date(p.nextWatering);
+    nextWatering.setHours(0, 0, 0, 0);
+    
+    return nextWatering.getTime() === dateToCheck.getTime();
+  });
+};
+
+const isToday = (day, month, year) => {
+  const today = new Date();
+  return (
+    day === today.getDate() &&
+    month === today.getMonth() &&
+    year === today.getFullYear()
+  );
+};
+
 // 📸 COMPRESSIONE IMMAGINI
 const compressImage = (file, maxWidth = 800, quality = 0.7) => {
   return new Promise((resolve, reject) => {
@@ -218,6 +256,8 @@ export default function App() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
   const [showNotificationPrompt, setShowNotificationPrompt] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
+const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
+const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
 
 // 📸 GESTIONE FOTO (dentro il componente)
 const handleImageUpload = async (myId, file) => {
@@ -591,7 +631,7 @@ useEffect(() => {
           {[
             { id: 'mie', label: '🏠 Le Mie', count: miePiante.length },
             { id: 'plantario', label: '📚 Plantario', count: plantDB.length },
-            { id: 'todo', label: '✅ To-Do', count: plantsNeedWater.length }
+          { id: 'calendar', label: '📅 Calendar', count: plantsNeedWater.length }
           ].map(t => (
             <button
               key={t.id}
@@ -834,302 +874,356 @@ useEffect(() => {
           </>
         )}
 
-        {/* ✅ TO-DO MIGLIORATO */}
-        {tab === 'todo' && (
-          <>
-            {miePiante.length === 0 ? (
-              <div style={{
-                textAlign: 'center',
-                padding: '60px 20px',
-                color: COLORS.lightGreen
-              }}>
-                <div style={{ fontSize: '80px', marginBottom: '20px' }}>🌱</div>
-                <h2 style={{ color: COLORS.textDark, marginBottom: '10px' }}>Nessuna pianta ancora</h2>
-                <p>Aggiungi piante per vedere il calendario di innaffiatura</p>
-              </div>
-            ) : (
-              <>
-                {/* Da innaffiare ORA */}
-                          {plantsNeedWater.length > 0 && (
-                  <div style={{ marginBottom: 30 }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      marginBottom: 15
-                    }}>
-                      <h2 style={{ 
-                        color: COLORS.alertRed,
-                        margin: 0,
-                        fontSize: '20px',
-                        fontWeight: 'bold'
-                      }}>
-                        💧 Da innaffiare ora
-                      </h2>
-                      <div style={{
-                        backgroundColor: COLORS.alertRed,
-                        color: COLORS.creamWhite,
-                        padding: '4px 10px',
-                        borderRadius: 12,
-                        fontSize: '14px',
-                        fontWeight: 'bold'
-                      }}>
-                        {plantsNeedWater.length}
-                      </div>
-                    </div>
-
-                    {plantsNeedWater.map(p => {
-                      const daysOverdue = Math.abs(getDaysUntilWatering(p.nextWatering));
-                      return (
-                        <div
-                          key={p.myId}
-                          style={{
-                            display: 'flex',
-                            gap: 15,
-                            padding: 15,
-                            marginBottom: 12,
-                            borderRadius: 16,
-                            backgroundColor: COLORS.creamWhite,
-                            border: `3px solid ${COLORS.alertRed}`,
-                            boxShadow: '0 4px 12px rgba(193,102,107,0.2)'
-                          }}
-                        >
-                          <img
-                            src={getPlantImage(p)}
-                            alt={p.nome}
-                            onClick={() => setSelectedPlant(p)}
-                            style={{
-                              width: 70,
-                              height: 70,
-                              borderRadius: 12,
-                              objectFit: 'cover',
-                              cursor: 'pointer',
-                              border: `3px solid ${COLORS.alertRed}`
-                            }}
-                          />
-                          <div style={{ flex: 1 }}>
-                            <h3 style={{ 
-                              margin: '0 0 6px 0',
-                              color: COLORS.textDark,
-                              fontSize: '17px'
-                            }}>
-                              {p.nome}
-                            </h3>
-                            <div style={{
-                              fontSize: '13px',
-                              color: COLORS.alertRed,
-                              marginBottom: 10,
-                              fontWeight: 'bold'
-                            }}>
-                              {daysOverdue === 0 
-                                ? '⚠️ Da innaffiare oggi!' 
-                                : `⚠️ In ritardo di ${daysOverdue} ${daysOverdue === 1 ? 'giorno' : 'giorni'}!`
-                              }
-                            </div>
-                            <button
-                              onClick={() => {
-                                waterPlant(p.myId);
-                                sendNotification(
-                                  '✅ Pianta innaffiata!',
-                                  `${p.nome} è stata innaffiata. Prossima volta tra ${p.giorniAcqua} giorni.`,
-                                  '💧'
-                                );
-                              }}
-                              style={{
-                                padding: '8px 16px',
-                                backgroundColor: COLORS.militaryGreen,
-                                color: COLORS.creamWhite,
-                                border: 'none',
-                                borderRadius: 8,
-                                fontSize: '13px',
-                                fontWeight: 'bold',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 6
-                              }}
-                            >
-                              ✓ Ho innaffiato
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Prossimi 3 giorni */}
-                {plantsComingSoon.length > 0 && (
-                  <div style={{ marginBottom: 30 }}>
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      marginBottom: 15
-                    }}>
-                      <h2 style={{ 
-                        color: COLORS.textDark,
-                        margin: 0,
-                        fontSize: '18px',
-                        fontWeight: 'bold'
-                      }}>
-                        📅 Prossimi 3 giorni
-                      </h2>
-                      <div style={{
-                        backgroundColor: COLORS.accentGreen,
-                        color: COLORS.creamWhite,
-                        padding: '4px 10px',
-                        borderRadius: 12,
-                        fontSize: '13px',
-                        fontWeight: 'bold'
-                      }}>
-                        {plantsComingSoon.length}
-                      </div>
-                    </div>
-
-                    {plantsComingSoon.map(p => {
-                      const daysLeft = getDaysUntilWatering(p.nextWatering);
-                      const nextDate = new Date(p.nextWatering);
-                      const dateStr = nextDate.toLocaleDateString('it-IT', { 
-                        weekday: 'short', 
-                        day: 'numeric', 
-                        month: 'short' 
-                      });
-
-                      return (
-                        <div
-                          key={p.myId}
-                          onClick={() => setSelectedPlant(p)}
-                          style={{
-                            display: 'flex',
-                            gap: 15,
-                            padding: 15,
-                            marginBottom: 12,
-                            borderRadius: 16,
-                            backgroundColor: COLORS.creamWhite,
-                            border: `2px solid ${COLORS.lightGreen}`,
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                        >
-                          <img
-                            src={getPlantImage(p)}
-                            alt={p.nome}
-                            style={{
-                              width: 60,
-                              height: 60,
-                              borderRadius: 12,
-                              objectFit: 'cover',
-                              border: `2px solid ${COLORS.accentGreen}`
-                            }}
-                          />
-                          <div style={{ flex: 1 }}>
-                            <h3 style={{ 
-                              margin: '0 0 6px 0',
-                              color: COLORS.textDark,
-                              fontSize: '16px'
-                            }}>
-                              {p.nome}
-                            </h3>
-                            <div style={{
-                              fontSize: '13px',
-                              color: COLORS.lightGreen,
-                              marginBottom: 4
-                            }}>
-                              📅 {dateStr}
-                            </div>
-                            <div style={{
-                              display: 'inline-block',
-                              padding: '4px 10px',
-                              backgroundColor: COLORS.accentGreen + '30',
-                              color: COLORS.textDark,
-                              borderRadius: 6,
-                              fontSize: '12px',
-                              fontWeight: 'bold'
-                            }}>
-                              Tra {daysLeft} {daysLeft === 1 ? 'giorno' : 'giorni'}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-
-                {/* Tutte le altre piante */}
-                {miePiante.filter(p => getDaysUntilWatering(p.nextWatering) > 3).length > 0 && (
-                  <div>
-                    <h2 style={{ 
-                      color: COLORS.textDark,
-                      margin: '0 0 15px 0',
-                      fontSize: '18px',
-                      fontWeight: 'bold'
-                    }}>
-                      🌿 Altre piante
-                    </h2>
-                    {miePiante
-                      .filter(p => getDaysUntilWatering(p.nextWatering) > 3)
-                      .sort((a, b) => new Date(a.nextWatering) - new Date(b.nextWatering))
-                      .map(p => {
-                        const daysLeft = getDaysUntilWatering(p.nextWatering);
-                        return (
-                          <div
-                            key={p.myId}
-                            onClick={() => setSelectedPlant(p)}
-                            style={{
-                              display: 'flex',
-                              gap: 12,
-                              padding: 12,
-                              marginBottom: 10,
-                              borderRadius: 12,
-                              backgroundColor: COLORS.creamWhite,
-                              border: `1px solid ${COLORS.lightGreen}40`,
-                              cursor: 'pointer',
-                              transition: 'all 0.2s'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.backgroundColor = COLORS.lightGreen + '10'}
-                            onMouseLeave={(e) => e.currentTarget.style.backgroundColor = COLORS.creamWhite}
-                          >
-                            <img
-                              src={getPlantImage(p)}
-                              alt={p.nome}
-                              style={{
-                                width: 50,
-                                height: 50,
-                                borderRadius: 10,
-                                objectFit: 'cover'
-                              }}
-                            />
-                            <div style={{ flex: 1 }}>
-                              <div style={{ 
-                                fontWeight: '600',
-                                color: COLORS.textDark,
-                                marginBottom: 4,
-                                fontSize: '15px'
-                              }}>
-                                {p.nome}
-                              </div>
-                              <div style={{
-                                fontSize: '12px',
-                                color: COLORS.lightGreen
-                              }}>
-                                Tra {daysLeft} giorni
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
+    {/* 📅 CALENDAR */}
+{tab === 'calendar' && (
+  <>
+    {miePiante.length === 0 ? (
+      <div style={{
+        textAlign: 'center',
+        padding: '60px 20px',
+        color: COLORS.lightGreen
+      }}>
+        <div style={{ fontSize: '80px', marginBottom: '20px' }}>📅</div>
+        <h2 style={{ color: COLORS.textDark, marginBottom: '10px' }}>Nessuna pianta ancora</h2>
+        <p>Aggiungi piante per vedere il calendario di innaffiatura</p>
       </div>
+    ) : (
+      <>
+        {/* Header Calendario */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 20,
+          padding: '15px',
+          backgroundColor: COLORS.militaryGreen,
+          borderRadius: 12,
+          color: COLORS.creamWhite
+        }}>
+          <button
+            onClick={() => {
+              if (currentMonth === 0) {
+                setCurrentMonth(11);
+                setCurrentYear(currentYear - 1);
+              } else {
+                setCurrentMonth(currentMonth - 1);
+              }
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: COLORS.creamWhite,
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '5px 10px'
+            }}
+          >
+            ‹
+          </button>
+          
+          <div style={{
+            textAlign: 'center',
+            flex: 1
+          }}>
+            <div style={{ fontSize: '20px', fontWeight: 'bold' }}>
+              {getMonthName(currentMonth)}
+            </div>
+            <div style={{ fontSize: '14px', opacity: 0.9 }}>
+              {currentYear}
+            </div>
+          </div>
+          
+          <button
+            onClick={() => {
+              if (currentMonth === 11) {
+                setCurrentMonth(0);
+                setCurrentYear(currentYear + 1);
+              } else {
+                setCurrentMonth(currentMonth + 1);
+              }
+            }}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: COLORS.creamWhite,
+              fontSize: '24px',
+              cursor: 'pointer',
+              padding: '5px 10px'
+            }}
+          >
+            ›
+          </button>
+        </div>
 
+        {/* Pulsante Oggi */}
+        <button
+          onClick={() => {
+            setCurrentMonth(new Date().getMonth());
+            setCurrentYear(new Date().getFullYear());
+          }}
+          style={{
+            width: '100%',
+            padding: '10px',
+            marginBottom: 15,
+            backgroundColor: COLORS.accentGreen,
+            color: COLORS.creamWhite,
+            border: 'none',
+            borderRadius: 8,
+            fontSize: '14px',
+            fontWeight: 'bold',
+            cursor: 'pointer'
+          }}
+        >
+          📍 Vai a Oggi
+        </button>
+
+        {/* Giorni della Settimana */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          gap: 5,
+          marginBottom: 10
+        }}>
+          {['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'].map(day => (
+            <div
+              key={day}
+              style={{
+                textAlign: 'center',
+                padding: '8px 0',
+                fontSize: '12px',
+                fontWeight: 'bold',
+                color: COLORS.textDark
+              }}
+            >
+              {day}
+            </div>
+          ))}
+        </div>
+
+        {/* Griglia Calendario */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(7, 1fr)',
+          gap: 5
+        }}>
+          {/* Celle vuote per allineare il primo giorno */}
+          {Array.from({ length: getFirstDayOfMonth(currentMonth, currentYear) }).map((_, i) => (
+            <div key={`empty-${i}`} style={{ aspectRatio: '1' }} />
+          ))}
+
+          {/* Giorni del mese */}
+          {Array.from({ length: getDaysInMonth(currentMonth, currentYear) }).map((_, i) => {
+            const day = i + 1;
+            const plantsForDay = getPlantsForDate(day, currentMonth, currentYear, miePiante);
+            const today = isToday(day, currentMonth, currentYear);
+            const hasPlantsToWater = plantsForDay.length > 0;
+
+            return (
+              <div
+                key={day}
+                onClick={() => {
+                  if (plantsForDay.length > 0) {
+                    setSelectedPlant(plantsForDay[0]);
+                  }
+                }}
+                style={{
+                  aspectRatio: '1',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 5,
+                  borderRadius: 8,
+                  backgroundColor: today 
+                    ? COLORS.accentGreen 
+                    : hasPlantsToWater 
+                      ? COLORS.alertRed + '20' 
+                      : COLORS.creamWhite,
+                  border: today 
+                    ? `2px solid ${COLORS.militaryGreen}` 
+                    : hasPlantsToWater 
+                      ? `2px solid ${COLORS.alertRed}` 
+                      : `1px solid ${COLORS.lightGreen}40`,
+                  cursor: hasPlantsToWater ? 'pointer' : 'default',
+                  transition: 'all 0.2s',
+                  position: 'relative'
+                }}
+                onMouseEnter={(e) => {
+                  if (hasPlantsToWater) {
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                }}
+              >
+                <div style={{
+                  fontSize: '14px',
+                  fontWeight: today ? 'bold' : 'normal',
+                  color: today ? COLORS.creamWhite : COLORS.textDark,
+                  marginBottom: 2
+                }}>
+                  {day}
+                </div>
+
+                {hasPlantsToWater && (
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: 2,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}>
+                    {plantsForDay.slice(0, 3).map((plant, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          backgroundColor: COLORS.alertRed
+                        }}
+                      />
+                    ))}
+                    {plantsForDay.length > 3 && (
+                      <div style={{
+                        fontSize: '8px',
+                        color: COLORS.alertRed,
+                        fontWeight: 'bold'
+                      }}>
+                        +{plantsForDay.length - 3}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Legenda */}
+        <div style={{
+          marginTop: 20,
+          padding: 15,
+          backgroundColor: COLORS.lightGreen + '20',
+          borderRadius: 12
+        }}>
+          <div style={{
+            fontSize: '14px',
+            fontWeight: 'bold',
+            color: COLORS.textDark,
+            marginBottom: 10
+          }}>
+            📖 Legenda
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 20,
+                height: 20,
+                borderRadius: 4,
+                backgroundColor: COLORS.accentGreen,
+                border: `2px solid ${COLORS.militaryGreen}`
+              }} />
+              <span style={{ fontSize: '13px', color: COLORS.textDark }}>Oggi</span>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 20,
+                height: 20,
+                borderRadius: 4,
+                backgroundColor: COLORS.alertRed + '20',
+                border: `2px solid ${COLORS.alertRed}`
+              }} />
+              <span style={{ fontSize: '13px', color: COLORS.textDark }}>Giorno con piante da innaffiare</span>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{
+                width: 6,
+                height: 6,
+                borderRadius: '50%',
+                backgroundColor: COLORS.alertRed
+              }} />
+              <span style={{ fontSize: '13px', color: COLORS.textDark }}>Ogni pallino = 1 pianta</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Lista Piante da Innaffiare Questo Mese */}
+        {miePiante.filter(p => {
+          const nextWatering = new Date(p.nextWatering);
+          return (
+            nextWatering.getMonth() === currentMonth &&
+            nextWatering.getFullYear() === currentYear
+          );
+        }).length > 0 && (
+          <div style={{ marginTop: 20 }}>
+            <h3 style={{
+              color: COLORS.textDark,
+              fontSize: '16px',
+              marginBottom: 15
+            }}>
+              🌿 Piante da innaffiare questo mese
+            </h3>
+            
+            {miePiante
+              .filter(p => {
+                const nextWatering = new Date(p.nextWatering);
+                return (
+                  nextWatering.getMonth() === currentMonth &&
+                  nextWatering.getFullYear() === currentYear
+                );
+              })
+              .sort((a, b) => new Date(a.nextWatering) - new Date(b.nextWatering))
+              .map(p => {
+                const nextDate = new Date(p.nextWatering);
+                const daysLeft = getDaysUntilWatering(p.nextWatering);
+                const needsWater = daysLeft <= 0;
+                
+                return (
+                  <div
+                    key={p.myId}
+                    onClick={() => setSelectedPlant(p)}
+                    style={{
+                      display: 'flex',
+                      gap: 12,
+                      padding: 12,
+                      marginBottom: 10,
+                      borderRadius: 12,
+                      backgroundColor: COLORS.creamWhite,
+                      border: `2px solid ${needsWater ? COLORS.alertRed : COLORS.lightGreen}`,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                  >
+                    <img
+                      src={getPlantImage(p)}
+                      alt={p.nome}
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 10,
+                        objectFit: 'cover',
+                        border: `2px solid ${needsWater ? COLORS.alertRed : COLORS.accentGreen}`
+                      }}
+                    />
+                    <div style={{ flex: 1 }}>
+                      <div style={{
+                        fontWeight: 'bold',
+                        color: COLORS.textDark,
+                        marginBottom: 4
+                      }}>
+                        {p.nome}
+                      </div>
+                      <div style={{
+                        fontSize: '13px',
+                        color: needsWater ? COLORS.alertRed : COLORS.lightGreen,
+                        font
       {/* 🔍 MODAL DETTAGLIO PIANTA */}
       {selectedPlant && (
         <div
