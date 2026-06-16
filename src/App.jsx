@@ -1221,9 +1221,24 @@ useEffect(() => {
                         {p.nome}
                       </div>
                       <div style={{
-                        fontSize: '13px',
+                                               fontSize: '13px',
                         color: needsWater ? COLORS.alertRed : COLORS.lightGreen,
-                        font
+                        fontWeight: '500'
+                      }}>
+                        {needsWater ? '💧 Innaffia ora!' : `📅 ${nextDate.getDate()} ${getMonthName(currentMonth).substring(0, 3)}`}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </>
+    )}
+  </>
+)}
+              </div>  {/* Chiude div contenuto */}
+
       {/* 🔍 MODAL DETTAGLIO PIANTA */}
       {selectedPlant && (
         <div
