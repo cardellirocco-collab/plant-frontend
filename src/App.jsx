@@ -245,44 +245,68 @@ const compressImage = (file, maxWidth = 800, quality = 0.7) => {
   });
 };
 
-// 🌿 RICONOSCIMENTO PIANTE CON AI
+// 🌿 RICONOSCIMENTO PIANTE CON PLANTNET (GRATUITO)
 const identifyPlant = async (imageBase64) => {
-  const API_KEY = '2b10DrKAGtpFw2DtP2m6aVL6O';
-  
   try {
-    const response = await fetch('https://api.plant.id/v2/identify', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Api-Key': API_KEY
-      },
-      body: JSON.stringify({
-        images: [imageBase64.split(',')[1]], // Rimuove "data:image/jpeg;base64,"
-        modifiers: ['similar_images'],
-        plant_details: ['common_names', 'taxonomy', 'url', 'wiki_description']
-      })
-    });
+    console.log('🔍 Inizio riconoscimento con PlantNet...');
+    console.log('📸 Dimensione immagine:', (imageBase64.length / 1024).toFixed(2), 'KB');
+    
+    // Converti base64 in blob
+    const base64Data = imageBase64.split(',')[1];
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/jpeg' });
+    
+    // Crea FormData
+    const formData = new FormData();
+    formData.append('images', blob, 'plant.jpg');
+    formData.append('organs', 'leaf');
+    
+    // Chiama API PlantNet (gratuita)
+    const response = await fetch(
+      'https://my-api.plantnet.org/v2/identify/all?api-key=2b10vKjLV5ajNd0KLcXKe4DSf',
+      {
+        method: 'POST',
+        body: formData
+      }
+    );
+
+    console.log('📡 Response status:', response.status);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('❌ Errore API:', errorText);
+      throw new Error(`API Error: ${response.status}`);
+    }
 
     const data = await response.json();
+    console.log('✅ Dati ricevuti:', data);
     
-    if (data.suggestions && data.suggestions.length > 0) {
-      return data.suggestions.slice(0, 3).map(suggestion => ({
-        nome: suggestion.plant_name,
-        nomeScientfico: suggestion.plant_details?.taxonomy?.genus || suggestion.plant_name,
-        probabilita: (suggestion.probability * 100).toFixed(1),
-        immagine: suggestion.similar_images?.[0]?.url || '',
-        descrizione: suggestion.plant_details?.wiki_description?.value || 'Nessuna descrizione disponibile'
+    if (data.results && data.results.length > 0) {
+      console.log('🌿 Piante trovate:', data.results.length);
+      
+      return data.results.slice(0, 3).map(result => ({
+        nome: result.species.commonNames?.[0] || result.species.scientificNameWithoutAuthor,
+        nomeScientfico: result.species.scientificNameWithoutAuthor,
+        probabilita: (result.score * 100).toFixed(1),
+        immagine: result.images?.[0]?.url?.o || result.images?.[0]?.url?.m || '',
+        descrizione: `Famiglia: ${result.species.family?.scientificNameWithoutAuthor || 'N/A'}. Genere: ${result.species.genus?.scientificNameWithoutAuthor || 'N/A'}`
       }));
+    } else {
+      console.warn('⚠️ Nessuna pianta trovata');
+      return null;
     }
     
-    return null;
   } catch (error) {
-    console.error('Errore riconoscimento pianta:', error);
+    console.error('❌ Errore completo:', error);
+    alert('❌ Errore: ' + error.message + '. Riprova con una foto più chiara delle foglie.');
     return null;
   }
 };
-
-
 // 📱 COMPONENTE PRINCIPALE
 export default function App() {
   const [miePiante, setMiePiante] = useState([]);
