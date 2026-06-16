@@ -1757,15 +1757,81 @@ useEffect(() => {
           </h3>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {suggestedPlants.map((plant, index) => (
-              <div
-                key={index}
-                onClick={() => {
-                  setSelectedPlant(plant);
-                  setShowManualInput(false);
-                  setManualPlantName("");
-                  setSuggestedPlants([]);
-                }}
+           {suggestedPlants.map((plant, index) => (
+  <div
+    key={index}
+    onClick={() => {
+      // ✅ AGGIUNGI LA PIANTA DIRETTAMENTE
+      addPlant(plant);
+      
+      // Chiudi il modal
+      setShowManualInput(false);
+      setManualPlantName("");
+      setSuggestedPlants([]);
+      
+      // Mostra conferma
+      alert(`✅ ${plant.nome} aggiunta alle tue piante!`);
+      
+      // Vai al tab "Le Mie Piante"
+      setTab('mie');
+    }}
+    style={{
+      display: 'flex',
+      gap: 12,
+      padding: 12,
+      borderRadius: 12,
+      border: `2px solid ${COLORS.accentGreen}`,
+      backgroundColor: index === 0 ? COLORS.accentGreen + '20' : COLORS.creamWhite,
+      cursor: 'pointer',
+      transition: 'all 0.3s'
+    }}
+    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+  >
+    <img
+      src={plant.img}
+      alt={plant.nome}
+      style={{
+        width: 60,
+        height: 60,
+        borderRadius: 10,
+        objectFit: 'cover',
+        border: `2px solid ${COLORS.accentGreen}`
+      }}
+    />
+    <div style={{ flex: 1 }}>
+      <div style={{
+        fontWeight: 'bold',
+        color: COLORS.textDark,
+        marginBottom: 4,
+        fontSize: '15px'
+      }}>
+        {plant.nome}
+      </div>
+      <div style={{
+        fontSize: '12px',
+        color: COLORS.lightGreen,
+        fontStyle: 'italic',
+        marginBottom: 6
+      }}>
+        {plant.nomeScientfico}
+      </div>
+      <div style={{
+        fontSize: '11px',
+        color: COLORS.textDark
+      }}>
+        {getLightIcon(plant.luce)} {plant.luce} • {getWaterIcon(plant.quantitaAcqua)} ogni {plant.giorniAcqua}gg
+      </div>
+    </div>
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      fontSize: '20px'
+    }}>
+      ➕  {/* ✅ Cambiato da 👉 a ➕ per indicare "aggiungi" */}
+    </div>
+  </div>
+))}
                 style={{
                   display: 'flex',
                   gap: 12,
@@ -1884,6 +1950,254 @@ useEffect(() => {
     </div>
   </div>
 )}
+
+{/* 🎨 MODAL CREA PIANTA CUSTOM */}
+{showCustomPlantForm && (
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2001,
+    padding: 20
+  }}>
+    <div style={{
+      backgroundColor: COLORS.creamWhite,
+      borderRadius: 16,
+      padding: 20,
+      maxWidth: 500,
+      width: '100%',
+      maxHeight: '80vh',
+      overflow: 'auto',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20
+      }}>
+        <h2 style={{
+          margin: 0,
+          color: COLORS.textDark,
+          fontSize: '22px'
+        }}>
+          🎨 Crea Pianta Personalizzata
+        </h2>
+        <button
+          onClick={() => {
+            setShowCustomPlantForm(false);
+            setCustomPlant({
+              nome: "",
+              nomeScientfico: "",
+              giorniAcqua: 7,
+              luce: "Media",
+              quantitaAcqua: "Moderata",
+              difficolta: "Facile"
+            });
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '28px',
+            cursor: 'pointer',
+            color: COLORS.lightGreen,
+            padding: 0,
+            lineHeight: 1
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Form */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 15 }}>
+        
+        {/* Nome */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: 6,
+            fontSize: '14px',
+            fontWeight: 'bold',
+            color: COLORS.textDark
+          }}>
+            Nome Pianta *
+          </label>
+          <input
+            type="text"
+            value={customPlant.nome}
+            onChange={(e) => setCustomPlant({...customPlant, nome: e.target.value})}
+            placeholder="Es: Monstera"
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: 8,
+              border: `2px solid ${COLORS.lightGreen}`,
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+
+        {/* Nome Scientifico */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: 6,
+            fontSize: '14px',
+            fontWeight: 'bold',
+            color: COLORS.textDark
+          }}>
+            Nome Scientifico (opzionale)
+          </label>
+          <input
+            type="text"
+            value={customPlant.nomeScientfico}
+            onChange={(e) => setCustomPlant({...customPlant, nomeScientfico: e.target.value})}
+            placeholder="Es: Monstera deliciosa"
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: 8,
+              border: `2px solid ${COLORS.lightGreen}`,
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+
+        {/* Giorni Acqua */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: 6,
+            fontSize: '14px',
+            fontWeight: 'bold',
+            color: COLORS.textDark
+          }}>
+            Innaffia ogni quanti giorni? *
+          </label>
+          <input
+            type="number"
+            value={customPlant.giorniAcqua}
+            onChange={(e) => setCustomPlant({...customPlant, giorniAcqua: parseInt(e.target.value) || 7})}
+            min="1"
+            max="30"
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: 8,
+              border: `2px solid ${COLORS.lightGreen}`,
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+          />
+        </div>
+
+        {/* Luce */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: 6,
+            fontSize: '14px',
+            fontWeight: 'bold',
+            color: COLORS.textDark
+          }}>
+            Esposizione Luce *
+          </label>
+          <select
+            value={customPlant.luce}
+            onChange={(e) => setCustomPlant({...customPlant, luce: e.target.value})}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: 8,
+              border: `2px solid ${COLORS.lightGreen}`,
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <option value="Bassa">☁️ Bassa</option>
+            <option value="Bassa-Media">⛅ Bassa-Media</option>
+            <option value="Media">⛅ Media</option>
+            <option value="Media-Alta">☀️ Media-Alta</option>
+            <option value="Alta">☀️ Alta</option>
+          </select>
+        </div>
+
+        {/* Quantità Acqua */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: 6,
+            fontSize: '14px',
+            fontWeight: 'bold',
+            color: COLORS.textDark
+          }}>
+            Quantità Acqua *
+          </label>
+          <select
+            value={customPlant.quantitaAcqua}
+            onChange={(e) => setCustomPlant({...customPlant, quantitaAcqua: e.target.value})}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: 8,
+              border: `2px solid ${COLORS.lightGreen}`,
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <option value="Molto poca">💧 Molto poca</option>
+            <option value="Poca">💧💧 Poca</option>
+            <option value="Moderata">💧💧💧 Moderata</option>
+            <option value="Alta">💧💧💧💧 Alta</option>
+          </select>
+        </div>
+
+        {/* Difficoltà */}
+        <div>
+          <label style={{
+            display: 'block',
+            marginBottom: 6,
+            fontSize: '14px',
+            fontWeight: 'bold',
+            color: COLORS.textDark
+          }}>
+            Difficoltà *
+          </label>
+          <select
+            value={customPlant.difficolta}
+            onChange={(e) => setCustomPlant({...customPlant, difficolta: e.target.value})}
+            style={{
+              width: '100%',
+              padding: '12px',
+              borderRadius: 8,
+              border: `2px solid ${COLORS.lightGreen}`,
+              fontSize: '14px',
+              boxSizing: 'border-box'
+            }}
+          >
+            <option value="Molto Facile">⭐ Molto Facile</option>
+            <option value="Facile">⭐⭐ Facile</option>
+            <option value="Media">⭐⭐⭐ Media</option>
+            <option value="Difficile">⭐⭐⭐⭐ Difficile</option>
+          </select>
+        </div>
+
+        {/* Pulsante Salva */}
+        <button
+          onClick={() => {
+            if (!customPlant.nome.trim()) {
+              alert('❌
+    
     
       {/* 🔍 MODAL DETTAGLIO PIANTA */}
       {selectedPlant && (
