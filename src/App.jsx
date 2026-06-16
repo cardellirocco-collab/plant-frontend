@@ -245,6 +245,43 @@ const compressImage = (file, maxWidth = 800, quality = 0.7) => {
   });
 };
 
+// 🌿 RICONOSCIMENTO PIANTE CON AI
+const identifyPlant = async (imageBase64) => {
+  const API_KEY = '2b10DrKAGtpFw2DtP2m6aVL6O';
+  
+  try {
+    const response = await fetch('https://api.plant.id/v2/identify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Api-Key': API_KEY
+      },
+      body: JSON.stringify({
+        images: [imageBase64.split(',')[1]], // Rimuove "data:image/jpeg;base64,"
+        modifiers: ['similar_images'],
+        plant_details: ['common_names', 'taxonomy', 'url', 'wiki_description']
+      })
+    });
+
+    const data = await response.json();
+    
+    if (data.suggestions && data.suggestions.length > 0) {
+      return data.suggestions.slice(0, 3).map(suggestion => ({
+        nome: suggestion.plant_name,
+        nomeScientfico: suggestion.plant_details?.taxonomy?.genus || suggestion.plant_name,
+        probabilita: (suggestion.probability * 100).toFixed(1),
+        immagine: suggestion.similar_images?.[0]?.url || '',
+        descrizione: suggestion.plant_details?.wiki_description?.value || 'Nessuna descrizione disponibile'
+      }));
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('Errore riconoscimento pianta:', error);
+    return null;
+  }
+};
+
 
 // 📱 COMPONENTE PRINCIPALE
 export default function App() {
@@ -258,6 +295,9 @@ export default function App() {
   const [uploadingImage, setUploadingImage] = useState(false);
 const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
 const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+  const [identifyingPlant, setIdentifyingPlant] = useState(false);
+const [identifiedPlants, setIdentifiedPlants] = useState(null);
+const [showIdentifyModal, setShowIdentifyModal] = useState(false);
 
 // 📸 GESTIONE FOTO (dentro il componente)
 const handleImageUpload = async (myId, file) => {
@@ -791,8 +831,80 @@ useEffect(() => {
         )}
 
         {/* 📚 PLANTARIO */}
-        {tab === 'plantario' && (
-          <>
+       {tab === 'plantario' && (
+  <>
+    {/* Pulsante Riconoscimento AI */}
+    <div style={{
+      marginBottom: 20,
+      padding: 15,
+      backgroundColor: COLORS.accentGreen + '20',
+      borderRadius: 12,
+      border: `2px solid ${COLORS.accentGreen}`
+    }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 10
+      }}>
+        <span style={{ fontSize: '24px' }}>🤖</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 'bold', color: COLORS.textDark, marginBottom: 4 }}>
+            Riconoscimento AI
+          </div>
+          <div style={{ fontSize: '13px', color: COLORS.lightGreen }}>
+            Scatta una foto e scopri che pianta è!
+          </div>
+        </div>
+      </div>
+      
+      <label style={{
+        display: 'block',
+        width: '100%',
+        padding: '12px',
+        backgroundColor: COLORS.militaryGreen,
+        color: COLORS.creamWhite,
+        borderRadius: 8,
+        textAlign: 'center',
+        fontWeight: 'bold',
+        cursor: identifyingPlant ? 'not-allowed' : 'pointer',
+        opacity: identifyingPlant ? 0.6 : 1
+      }}>
+        {identifyingPlant ? '🔍 Analizzando...' : '📸 Scatta e Riconosci'}
+        <input
+          type="file"
+          accept="image/*"
+          capture="environment"
+          disabled={identifyingPlant}
+          onChange={async (e) => {
+            if (e.target.files[0]) {
+              setIdentifyingPlant(true);
+              
+              try {
+                // Comprimi immagine
+                const compressed = await compressImage(e.target.files[0], 1024, 0.8);
+                
+                // Riconosci pianta
+                const results = await identifyPlant(compressed);
+                
+                if (results) {
+                  setIdentifiedPlants(results);
+                  setShowIdentifyModal(true);
+                } else {
+                  alert('❌ Impossibile riconoscere la pianta. Riprova con una foto più chiara.');
+                }
+              } catch (error) {
+                alert('❌ Errore durante il riconoscimento. Riprova.');
+              } finally {
+                setIdentifyingPlant(false);
+                e.target.value = ''; // Reset input
+              }
+            }
+          }}
+          style={{ display: 'none' }}
+        />
+      </label>
+    </div>
             <input
               type="text"
               placeholder="🔍 Cerca pianta..."
@@ -1239,6 +1351,235 @@ useEffect(() => {
 )}
               </div>  {/* Chiude div contenuto */}
 
+      {/* 🤖 MODAL RISULTATI RICONOSCIMENTO */}
+      {showIdentifyModal && identifiedPlants && (
+        <div
+          onClick={() => setShowIdentifyModal(false)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: 20,
+            animation: 'fadeIn 0.3s'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              backgroundColor: COLORS.creamWhite,
+              borderRadius: 24,
+              maxWidth: 500,
+              width: '100%',
+              maxHeight: '80vh',
+              overflowY: 'auto',
+              animation: 'slideUp 0.3s'
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              position: 'sticky',
+              top: 0,
+              backgroundColor: COLORS.militaryGreen,
+              padding: '20px',
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              zIndex: 10
+            }}>
+              <h2 style={{ 
+                color: COLORS.creamWhite,
+                margin: 0,
+                fontSize: '20px'
+              }}>
+                🤖 Risultati Riconoscimento
+              </h2>
+              <button
+                onClick={() => setShowIdentifyModal(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: COLORS.creamWhite,
+                  fontSize: '28px',
+                  cursor: 'pointer',
+                  padding: 0,
+                  lineHeight: 1
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            {/* Risultati */}
+            <div style={{ padding: 20 }}>
+              <div style={{
+                fontSize: '14px',
+                color: COLORS.lightGreen,
+                marginBottom: 15,
+                textAlign: 'center'
+              }}>
+                Abbiamo trovato {identifiedPlants.length} possibili corrispondenze
+              </div>
+
+              {identifiedPlants.map((plant, idx) => {
+                // Cerca nel database se esiste già
+                const existingPlant = plantDB.find(p => 
+                  p.nomeScientfico.toLowerCase().includes(plant.nomeScientfico.toLowerCase()) ||
+                  p.nome.toLowerCase().includes(plant.nome.toLowerCase())
+                );
+
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      marginBottom: 15,
+                      padding: 15,
+                      borderRadius: 12,
+                      backgroundColor: COLORS.lightGreen + '10',
+                      border: `2px solid ${COLORS.lightGreen}`,
+                      cursor: existingPlant ? 'pointer' : 'default'
+                    }}
+                    onClick={() => {
+                      if (existingPlant) {
+                        setSelectedPlant(existingPlant);
+                        setShowIdentifyModal(false);
+                      }
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: 10
+                    }}>
+                      <div>
+                        <div style={{
+                          fontWeight: 'bold',
+                          color: COLORS.textDark,
+                          fontSize: '16px',
+                          marginBottom: 4
+                        }}>
+                          {plant.nome}
+                        </div>
+                        <div style={{
+                          fontSize: '13px',
+                          color: COLORS.lightGreen,
+                          fontStyle: 'italic'
+                        }}>
+                          {plant.nomeScientfico}
+                        </div>
+                      </div>
+                      <div style={{
+                        padding: '6px 12px',
+                        backgroundColor: COLORS.accentGreen,
+                        color: COLORS.creamWhite,
+                        borderRadius: 8,
+                        fontSize: '13px',
+                        fontWeight: 'bold'
+                      }}>
+                        {plant.probabilita}%
+                      </div>
+                    </div>
+
+                    {plant.immagine && (
+                      <img
+                        src={plant.immagine}
+                        alt={plant.nome}
+                        style={{
+                          width: '100%',
+                          height: 150,
+                          objectFit: 'cover',
+                          borderRadius: 8,
+                          marginBottom: 10
+                        }}
+                      />
+                    )}
+
+                    <div style={{
+                      fontSize: '13px',
+                      color: COLORS.textDark,
+                      marginBottom: 10,
+                      lineHeight: 1.5
+                    }}>
+                      {plant.descrizione.substring(0, 150)}...
+                    </div>
+
+                    {existingPlant ? (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedPlant(existingPlant);
+                          setShowIdentifyModal(false);
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: COLORS.militaryGreen,
+                          color: COLORS.creamWhite,
+                          border: 'none',
+                          borderRadius: 8,
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          fontSize: '14px'
+                        }}
+                      >
+                        ✅ Presente nel Plantario
+                      </button>
+                    ) : (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          alert('💡 Questa pianta non è ancora nel nostro database. Puoi aggiungerla manualmente!');
+                        }}
+                        style={{
+                          width: '100%',
+                          padding: '10px',
+                          backgroundColor: COLORS.lightGreen,
+                          color: COLORS.creamWhite,
+                          border: 'none',
+                          borderRadius: 8,
+                          fontWeight: 'bold',
+                          cursor: 'pointer',
+                          fontSize: '14px'
+                        }}
+                      >
+                        ➕ Aggiungi Manualmente
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+
+              <button
+                onClick={() => setShowIdentifyModal(false)}
+                style={{
+                  width: '100%',
+                  padding: '12px',
+                  backgroundColor: 'transparent',
+                  color: COLORS.textDark,
+                  border: `2px solid ${COLORS.lightGreen}`,
+                  borderRadius: 8,
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  marginTop: 10
+                }}
+              >
+                Chiudi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    
       {/* 🔍 MODAL DETTAGLIO PIANTA */}
       {selectedPlant && (
         <div
