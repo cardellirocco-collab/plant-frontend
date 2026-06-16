@@ -248,39 +248,21 @@ const compressImage = (file, maxWidth = 800, quality = 0.7) => {
 // 🌿 RICONOSCIMENTO PIANTE CON PLANTNET (GRATUITO)
 const identifyPlant = async (imageBase64) => {
   try {
-    console.log('🔍 Inizio riconoscimento con PlantNet...');
+    console.log('🔍 Inizio riconoscimento...');
     console.log('📸 Dimensione immagine:', (imageBase64.length / 1024).toFixed(2), 'KB');
     
-    // Converti base64 in blob
-    const base64Data = imageBase64.split(',')[1];
-    const byteCharacters = atob(base64Data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-      byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-    const blob = new Blob([byteArray], { type: 'image/jpeg' });
-    
-    // Crea FormData
-    const formData = new FormData();
-    formData.append('images', blob, 'plant.jpg');
-    formData.append('organs', 'leaf');
-    
-    // Chiama API PlantNet (gratuita)
-    const response = await fetch(
-      'https://my-api.plantnet.org/v2/identify/all?api-key=2b10vKjLV5ajNd0KLcXKe4DSf',
-      {
-        method: 'POST',
-        body: formData
-      }
-    );
+    const response = await fetch('http://localhost:3001/api/identify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ imageBase64 })
+    });
 
     console.log('📡 Response status:', response.status);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Errore API:', errorText);
-      throw new Error(`API Error: ${response.status}`);
+      throw new Error('Errore API');
     }
 
     const data = await response.json();
@@ -302,11 +284,11 @@ const identifyPlant = async (imageBase64) => {
     }
     
   } catch (error) {
-    console.error('❌ Errore completo:', error);
-    alert('❌ Errore: ' + error.message + '. Riprova con una foto più chiara delle foglie.');
+    console.error('❌ Errore:', error);
     return null;
   }
 };
+
 // 📱 COMPONENTE PRINCIPALE
 export default function App() {
   const [miePiante, setMiePiante] = useState([]);
@@ -322,7 +304,53 @@ const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [identifyingPlant, setIdentifyingPlant] = useState(false);
 const [identifiedPlants, setIdentifiedPlants] = useState(null);
 const [showIdentifyModal, setShowIdentifyModal] = useState(false);
+  const [showManualInput, setShowManualInput] = useState(false);
+const [manualPlantName, setManualPlantName] = useState("");
+const [suggestedPlants, setSuggestedPlants] = useState([]);
+const [showCustomPlantForm, setShowCustomPlantForm] = useState(false);
+const [customPlant, setCustomPlant] = useState({
+  nome: "",
+  nomeScientfico: "",
+  giorniAcqua: 7,
+  luce: "Media",
+  quantitaAcqua: "Moderata",
+  difficolta: "Facile"
+});
 
+// 🔍 SUGGERIMENTI INTELLIGENTI
+  const getSuggestedPlants = (searchText) => {
+    if (!searchText || searchText.length < 2) {
+      return [];
+    }
+    
+    const search = searchText.toLowerCase();
+    
+    // Cerca per nome comune o scientifico
+    const matches = plantDB.filter(p => 
+      p.nome.toLowerCase().includes(search) ||
+      p.nomeScientfico.toLowerCase().includes(search) ||
+      p.caratteristiche.toLowerCase().includes(search)
+    );
+    
+    // Ordina per rilevanza (match esatto prima)
+    matches.sort((a, b) => {
+      const aExact = a.nome.toLowerCase() === search;
+      const bExact = b.nome.toLowerCase() === search;
+      if (aExact && !bExact) return -1;
+      if (!aExact && bExact) return 1;
+      return 0;
+    });
+    
+    return matches.slice(0, 3);
+  };
+
+  // Aggiorna suggerimenti quando l'utente scrive
+  const handleManualInputChange = (text) => {
+    setManualPlantName(text);
+    const suggestions = getSuggestedPlants(text);
+    setSuggestedPlants(suggestions);
+  };
+  
 // 📸 GESTIONE FOTO (dentro il componente)
 const handleImageUpload = async (myId, file) => {
   if (!file || !file.type.startsWith('image/')) {
@@ -900,31 +928,52 @@ useEffect(() => {
           accept="image/*"
           capture="environment"
           disabled={identifyingPlant}
-          onChange={async (e) => {
-            if (e.target.files[0]) {
-              setIdentifyingPlant(true);
-              
-              try {
-                // Comprimi immagine
-                const compressed = await compressImage(e.target.files[0], 1024, 0.8);
-                
-                // Riconosci pianta
-                const results = await identifyPlant(compressed);
-                
-                if (results) {
-                  setIdentifiedPlants(results);
-                  setShowIdentifyModal(true);
-                } else {
-                  alert('❌ Impossibile riconoscere la pianta. Riprova con una foto più chiara.');
-                }
-              } catch (error) {
-                alert('❌ Errore durante il riconoscimento. Riprova.');
-              } finally {
-                setIdentifyingPlant(false);
-                e.target.value = ''; // Reset input
-              }
-            }
-          }}
+        onChange={async (e) => {
+  if (e.target.files[0]) {
+    setIdentifyingPlant(true);
+    
+    try {
+      console.log('📸 File selezionato:', e.target.files[0].name);
+      const compressed = await compressImage(e.target.files[0], 1024, 0.8);
+      console.log('✅ Immagine compressa');
+      
+      const results = await identifyPlant(compressed);
+      console.log('📊 Risultati:', results);
+      
+      if (results && results.length > 0) {
+        setIdentifiedPlants(results);
+        setShowIdentifyModal(true);
+      } else {
+        // ✅ FALLBACK: Mostra opzione inserimento manuale
+        const userChoice = confirm(
+          '❌ Non sono riuscito a riconoscere la pianta.\n\n' +
+          '📝 Vuoi inserirla manualmente?\n\n' +
+          'Clicca OK per inserimento manuale, Annulla per riprovare.'
+        );
+        
+        if (userChoice) {
+          setShowManualInput(true);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Errore:', error);
+      
+      // ✅ FALLBACK: Errore API
+      const userChoice = confirm(
+        '⚠️ Errore durante il riconoscimento.\n\n' +
+        '📝 Vuoi inserire la pianta manualmente?\n\n' +
+        'Clicca OK per continuare.'
+      );
+      
+      if (userChoice) {
+        setShowManualInput(true);
+      }
+    } finally {
+      setIdentifyingPlant(false);
+      e.target.value = '';
+    }
+  }
+}}
           style={{ display: 'none' }}
         />
       </label>
@@ -1603,6 +1652,238 @@ useEffect(() => {
           </div>
         </div>
       )}
+
+{/* 📝 MODAL INSERIMENTO MANUALE */}
+{showManualInput && (
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2000,
+    padding: 20
+  }}>
+    <div style={{
+      backgroundColor: COLORS.creamWhite,
+      borderRadius: 16,
+      padding: 20,
+      maxWidth: 500,
+      width: '100%',
+      maxHeight: '80vh',
+      overflow: 'auto',
+      boxShadow: '0 8px 32px rgba(0,0,0,0.3)'
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 20
+      }}>
+        <h2 style={{
+          margin: 0,
+          color: COLORS.textDark,
+          fontSize: '22px'
+        }}>
+          📝 Inserimento Manuale
+        </h2>
+        <button
+          onClick={() => {
+            setShowManualInput(false);
+            setManualPlantName("");
+            setSuggestedPlants([]);
+          }}
+          style={{
+            background: 'none',
+            border: 'none',
+            fontSize: '28px',
+            cursor: 'pointer',
+            color: COLORS.lightGreen,
+            padding: 0,
+            lineHeight: 1
+          }}
+        >
+          ×
+        </button>
+      </div>
+
+      {/* Info */}
+      <div style={{
+        padding: 12,
+        backgroundColor: COLORS.accentGreen + '20',
+        borderRadius: 8,
+        marginBottom: 20,
+        fontSize: '14px',
+        color: COLORS.textDark
+      }}>
+        💡 Scrivi il nome della pianta e ti suggerirò 3 opzioni dal database
+      </div>
+
+      {/* Input Ricerca */}
+      <input
+        type="text"
+        placeholder="Es: Monstera, Pothos, Aloe..."
+        value={manualPlantName}
+        onChange={(e) => handleManualInputChange(e.target.value)}
+        autoFocus
+        style={{
+          width: '100%',
+          padding: '14px 16px',
+          marginBottom: 20,
+          borderRadius: 12,
+          border: `2px solid ${COLORS.accentGreen}`,
+          fontSize: '16px',
+          backgroundColor: COLORS.creamWhite,
+          color: COLORS.textDark,
+          outline: 'none',
+          boxSizing: 'border-box'
+        }}
+      />
+
+      {/* Suggerimenti */}
+      {suggestedPlants.length > 0 && (
+        <>
+          <h3 style={{
+            fontSize: '16px',
+            color: COLORS.textDark,
+            marginBottom: 15
+          }}>
+            🌿 Piante Suggerite ({suggestedPlants.length})
+          </h3>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {suggestedPlants.map((plant, index) => (
+              <div
+                key={index}
+                onClick={() => {
+                  setSelectedPlant(plant);
+                  setShowManualInput(false);
+                  setManualPlantName("");
+                  setSuggestedPlants([]);
+                }}
+                style={{
+                  display: 'flex',
+                  gap: 12,
+                  padding: 12,
+                  borderRadius: 12,
+                  border: `2px solid ${COLORS.accentGreen}`,
+                  backgroundColor: index === 0 ? COLORS.accentGreen + '20' : COLORS.creamWhite,
+                  cursor: 'pointer',
+                  transition: 'all 0.3s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                <img
+                  src={plant.img}
+                  alt={plant.nome}
+                  style={{
+                    width: 60,
+                    height: 60,
+                    borderRadius: 10,
+                    objectFit: 'cover',
+                    border: `2px solid ${COLORS.accentGreen}`
+                  }}
+                />
+                <div style={{ flex: 1 }}>
+                  <div style={{
+                    fontWeight: 'bold',
+                    color: COLORS.textDark,
+                    marginBottom: 4,
+                    fontSize: '15px'
+                  }}>
+                    {plant.nome}
+                  </div>
+                  <div style={{
+                    fontSize: '12px',
+                    color: COLORS.lightGreen,
+                    fontStyle: 'italic',
+                    marginBottom: 6
+                  }}>
+                    {plant.nomeScientfico}
+                  </div>
+                  <div style={{
+                    fontSize: '11px',
+                    color: COLORS.textDark
+                  }}>
+                    {getLightIcon(plant.luce)} {plant.luce} • {getWaterIcon(plant.quantitaAcqua)} ogni {plant.giorniAcqua}gg
+                  </div>
+                </div>
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontSize: '20px'
+                }}>
+                  👉
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* Nessun Risultato */}
+      {manualPlantName.length >= 2 && suggestedPlants.length === 0 && (
+        <div style={{
+          textAlign: 'center',
+          padding: 30,
+          color: COLORS.lightGreen
+        }}>
+          <div style={{ fontSize: '50px', marginBottom: 15 }}>🔍</div>
+          <div style={{ fontSize: '16px', fontWeight: 'bold', marginBottom: 10 }}>
+            Nessuna pianta trovata
+          </div>
+          <div style={{ fontSize: '14px', marginBottom: 20 }}>
+            "{manualPlantName}" non è nel nostro database
+          </div>
+          
+          {/* Pulsante Crea Pianta Custom */}
+          <button
+            onClick={() => {
+              setCustomPlant({
+                ...customPlant,
+                nome: manualPlantName
+              });
+              setShowCustomPlantForm(true);
+              setShowManualInput(false);
+            }}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: COLORS.militaryGreen,
+              color: COLORS.creamWhite,
+              border: 'none',
+              borderRadius: 10,
+              fontSize: '14px',
+              fontWeight: 'bold',
+              cursor: 'pointer'
+            }}
+          >
+            ➕ Crea Pianta Personalizzata
+          </button>
+        </div>
+      )}
+
+      {/* Istruzioni */}
+      {manualPlantName.length < 2 && (
+        <div style={{
+          textAlign: 'center',
+          padding: 30,
+          color: COLORS.lightGreen
+        }}>
+          <div style={{ fontSize: '50px', marginBottom: 15 }}>✍️</div>
+          <div style={{ fontSize: '14px' }}>
+            Inizia a scrivere il nome della pianta...
+          </div>
+        </div>
+      )}
+    </div>
+  </div>
+)}
     
       {/* 🔍 MODAL DETTAGLIO PIANTA */}
       {selectedPlant && (
