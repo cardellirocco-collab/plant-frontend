@@ -1745,153 +1745,96 @@ useEffect(() => {
         }}
       />
 
-      {/* Suggerimenti */}
-      {suggestedPlants.length > 0 && (
-        <>
-          <h3 style={{
-            fontSize: '16px',
-            color: COLORS.textDark,
-            marginBottom: 15
-          }}>
-            🌿 Piante Suggerite ({suggestedPlants.length})
-          </h3>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-           {suggestedPlants.map((plant, index) => (
-  <div
-    key={index}
-    onClick={() => {
-      // ✅ AGGIUNGI LA PIANTA DIRETTAMENTE
-      addPlant(plant);
-      
-      // Chiudi il modal
-      setShowManualInput(false);
-      setManualPlantName("");
-      setSuggestedPlants([]);
-      
-      // Mostra conferma
-      alert(`✅ ${plant.nome} aggiunta alle tue piante!`);
-      
-      // Vai al tab "Le Mie Piante"
-      setTab('mie');
-    }}
-    style={{
-      display: 'flex',
-      gap: 12,
-      padding: 12,
-      borderRadius: 12,
-      border: `2px solid ${COLORS.accentGreen}`,
-      backgroundColor: index === 0 ? COLORS.accentGreen + '20' : COLORS.creamWhite,
-      cursor: 'pointer',
-      transition: 'all 0.3s'
-    }}
-    onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-    onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-  >
-    <img
-      src={plant.img}
-      alt={plant.nome}
-      style={{
-        width: 60,
-        height: 60,
-        borderRadius: 10,
-        objectFit: 'cover',
-        border: `2px solid ${COLORS.accentGreen}`
-      }}
-    />
-    <div style={{ flex: 1 }}>
-      <div style={{
-        fontWeight: 'bold',
-        color: COLORS.textDark,
-        marginBottom: 4,
-        fontSize: '15px'
-      }}>
-        {plant.nome}
-      </div>
-      <div style={{
-        fontSize: '12px',
-        color: COLORS.lightGreen,
-        fontStyle: 'italic',
-        marginBottom: 6
-      }}>
-        {plant.nomeScientfico}
-      </div>
-      <div style={{
-        fontSize: '11px',
-        color: COLORS.textDark
-      }}>
-        {getLightIcon(plant.luce)} {plant.luce} • {getWaterIcon(plant.quantitaAcqua)} ogni {plant.giorniAcqua}gg
-      </div>
-    </div>
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      fontSize: '20px'
+   {/* Suggerimenti */}
+{suggestedPlants.length > 0 && (
+  <>
+    <h3 style={{
+      fontSize: '16px',
+      color: COLORS.textDark,
+      marginBottom: 15
     }}>
-      ➕  {/* ✅ Cambiato da 👉 a ➕ per indicare "aggiungi" */}
-    </div>
-  </div>
-))}
-                style={{
-                  display: 'flex',
-                  gap: 12,
-                  padding: 12,
-                  borderRadius: 12,
-                  border: `2px solid ${COLORS.accentGreen}`,
-                  backgroundColor: index === 0 ? COLORS.accentGreen + '20' : COLORS.creamWhite,
-                  cursor: 'pointer',
-                  transition: 'all 0.3s'
-                }}
-                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-              >
-                <img
-                  src={plant.img}
-                  alt={plant.nome}
-                  style={{
-                    width: 60,
-                    height: 60,
-                    borderRadius: 10,
-                    objectFit: 'cover',
-                    border: `2px solid ${COLORS.accentGreen}`
-                  }}
-                />
-                <div style={{ flex: 1 }}>
-                  <div style={{
-                    fontWeight: 'bold',
-                    color: COLORS.textDark,
-                    marginBottom: 4,
-                    fontSize: '15px'
-                  }}>
-                    {plant.nome}
-                  </div>
-                  <div style={{
-                    fontSize: '12px',
-                    color: COLORS.lightGreen,
-                    fontStyle: 'italic',
-                    marginBottom: 6
-                  }}>
-                    {plant.nomeScientfico}
-                  </div>
-                  <div style={{
-                    fontSize: '11px',
-                    color: COLORS.textDark
-                  }}>
-                    {getLightIcon(plant.luce)} {plant.luce} • {getWaterIcon(plant.quantitaAcqua)} ogni {plant.giorniAcqua}gg
-                  </div>
-                </div>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  fontSize: '20px'
-                }}>
-                  👉
-                </div>
-              </div>
-            ))}
+      🌿 Piante Suggerite ({suggestedPlants.length})
+    </h3>
+    
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {suggestedPlants.map((plant, index) => (
+        <div
+          key={index}
+          onClick={() => {
+            // ✅ AGGIUNGI LA PIANTA DIRETTAMENTE
+            addPlant(plant);
+            
+            // Chiudi il modal
+            setShowManualInput(false);
+            setManualPlantName("");
+            setSuggestedPlants([]);
+            
+            // Mostra conferma
+            alert(`✅ ${plant.nome} aggiunta alle tue piante!`);
+            
+            // Vai al tab "Le Mie Piante"
+            setTab('mie');
+          }}
+          style={{
+            display: 'flex',
+            gap: 12,
+            padding: 12,
+            borderRadius: 12,
+            border: `2px solid ${COLORS.accentGreen}`,
+            backgroundColor: index === 0 ? COLORS.accentGreen + '20' : COLORS.creamWhite,
+            cursor: 'pointer',
+            transition: 'all 0.3s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <img
+            src={plant.img}
+            alt={plant.nome}
+            style={{
+              width: 60,
+              height: 60,
+              borderRadius: 10,
+              objectFit: 'cover',
+              border: `2px solid ${COLORS.accentGreen}`
+            }}
+          />
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontWeight: 'bold',
+              color: COLORS.textDark,
+              marginBottom: 4,
+              fontSize: '15px'
+            }}>
+              {plant.nome}
+            </div>
+            <div style={{
+              fontSize: '12px',
+              color: COLORS.lightGreen,
+              fontStyle: 'italic',
+              marginBottom: 6
+            }}>
+              {plant.nomeScientfico}
+            </div>
+            <div style={{
+              fontSize: '11px',
+              color: COLORS.textDark
+            }}>
+              {getLightIcon(plant.luce)} {plant.luce} • {getWaterIcon(plant.quantitaAcqua)} ogni {plant.giorniAcqua}gg
+            </div>
           </div>
-        </>
-      )}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            fontSize: '20px'
+          }}>
+            ➕
+          </div>
+        </div>
+      ))}
+    </div>
+  </>
+)}
 
       {/* Nessun Risultato */}
       {manualPlantName.length >= 2 && suggestedPlants.length === 0 && (
